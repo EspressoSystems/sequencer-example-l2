@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - release-*
+    tags:
+      # YYYYMMDD
+      - "20[0-9][0-9][0-1][0-9][0-3][0-9]*"
+  pull_request:
+    branches:
+  workflow_dispatch:
+
+env:
+  RUSTFLAGS: "--cfg async_executor_impl=\"async-std\" --cfg async_channel_impl=\"async-std\""
+  RUST_LOG: info,libp2p=off,node=error
+
+jobs:
+  build:
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/espressosystems/devops-rust:stable
+    steps:
+      - uses: styfle/cancel-workflow-action@0.11.0
+        name: Cancel Outdated Builds
+        with:
+          all_but_latest: true
+          access_token: ${{ github.token }}
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - uses: actions/checkout@v4
+        name: Checkout Repository
+        with:
+          submodules: true
+
+      - uses: Swatinem/rust-cache@v2
+        name: Enable Rust Caching
+
+      - name: Build
+        run: |
+          cargo build --release --workspace
+
+      - name: Test
+        run: |
+          cargo test --release --workspace --all-features --no-run
+          cargo test --release --workspace --all-features --verbose -- --test-threads 1 --nocapture
+        timeout-minutes: 30
