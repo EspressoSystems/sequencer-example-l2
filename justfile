@@ -16,8 +16,8 @@ cli *cmd:
 pull:
     docker compose pull
 
-update-contract-bindings:
-    cargo run --bin gen-bindings
+bindings *args:
+    forge bind --bindings-path contract-bindings --select Example --crate-name "contract-bindings" {{args}}
 
 docker-stop-rm:
     docker stop $(docker ps -aq); docker rm $(docker ps -aq)

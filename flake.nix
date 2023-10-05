@@ -127,13 +127,16 @@
                 types_or = [ "solidity" ];
                 pass_filenames = true;
               };
-              contract-bindings = {
-                enable = true;
-                description = "Generate contract bindings";
-                entry = "cargo run --bin gen-bindings";
-                types_or = [ "solidity" ];
-                pass_filenames = false;
-              };
+              # MA: broken as of 2023-10-05. Cargo fmt makes changes to the generated
+              # bindings which then cause the consistency check of `forge bind` to fail
+              # because the files are no longer identical.
+              # contract-bindings = {
+              #   enable = true;
+              #   description = "Generate contract bindings";
+              #   entry = "just bindings";
+              #   types_or = [ "solidity" ];
+              #   pass_filenames = false;
+              # };
               prettier-fmt = {
                 enable = true;
                 description = "Enforce markdown formatting";

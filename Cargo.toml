@@ -11,10 +11,11 @@ async-compatibility-layer = { git = "https://github.com/EspressoSystems/async-co
 async-std = { version = "1.12", features = ["attributes"] }
 clap = "4.3.10"
 commit = { git = "https://github.com/EspressoSystems/commit", tag = "0.2.2" }
-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
+contract-bindings = { path = "./contract-bindings" }
 derive_more = "0.99.17"
 ethers = { version = "2.0.4", features = ["ws"] }
 futures = "0.3.28"
+hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "contract-bindings" }
 hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service" }
 jf-primitives = { git = "https://github.com/EspressoSystems/jellyfish", features = [
     "std",
