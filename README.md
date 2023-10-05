@@ -46,7 +46,7 @@ We first need to start a local Espresso Sequencer network.
     docker compose pull
     docker compose up -d --wait
 
-Once that is finished deploy the example rollup, from the the root of this repo run
+Once that is finished deploy the example rollup, from the root of this repo run
 
     docker compose pull
 
@@ -133,7 +133,7 @@ single example rollup transaction.
 6. The executor posts the proof to the rollup contract.
 7. The rollup contract verifies the proof by querying the latest certified block commitment from the sequencer contract.
    If the proof is valid, the contract updates its state commitment.
-8. Bob queries his balance using the the rollup API, and sees that he has received some new tokens. If this were a real
+8. Bob queries his balance using the rollup API, and sees that he has received some new tokens. If this were a real
    rollup, a potentially distrustful Bob could verify his balance against the rollup contract state commitment (the
    example does not currently include this feature).
 

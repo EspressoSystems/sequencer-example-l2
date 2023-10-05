@@ -680,7 +680,9 @@ name = "async-compatibility-layer"
 version = "1.0.0"
 source = "git+https://github.com/EspressoSystems/async-compatibility-layer?tag=1.3.0#f5478b9b33b8c5b81bfc029c84de9079fc8a64f7"
 dependencies = [
+ "async-channel",
  "async-lock",
+ "async-std",
  "async-trait",
  "color-eyre",
  "futures",
