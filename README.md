@@ -46,13 +46,22 @@ We first need to start a local Espresso Sequencer network.
     docker compose pull
     docker compose up -d --wait
 
-Once that is finished deploy the example rollup, from the root of this repo run
+Once that is finished deploy the example rollup, it can be run natively or with docker.
+
+To run the demo inside docker run the following instead
 
     docker compose pull
+    docker compose up
 
-TODO: deploy the example rollup
+To stop the docker demo run `docker compose down`.
 
-To stop the demo: `docker compose down`
+To run natively a rust toolchain is required. We provide a nix shell to install
+all dependencies. Nix can be installed via the
+[nix-installer](https://github.com/DeterminateSystems/nix-installer). Once
+installed run
+
+    nix develop
+    just dev-demo
 
 ### Interacting with the Demo
 

@@ -21,26 +21,46 @@ pub struct Options {
     pub api_port: u16,
 
     /// URL of a HotShot sequencer node.
-    #[clap(long, env = "ESPRESSO_SEQUENCER_URL")]
+    #[clap(
+        long,
+        env = "ESPRESSO_SEQUENCER_URL",
+        default_value = "http://localhost:50000"
+    )]
     pub sequencer_url: Url,
 
     /// URL of layer 1 Ethereum JSON-RPC provider.
-    #[clap(long, env = "ESPRESSO_DEMO_L1_HTTP_PROVIDER")]
+    #[clap(
+        long,
+        env = "ESPRESSO_DEMO_L1_HTTP_PROVIDER",
+        default_value = "http://localhost:8545"
+    )]
     pub l1_http_provider: Url,
 
     /// URL of layer 1 Ethereum JSON-RPC provider.
-    #[clap(long, env = "ESPRESSO_DEMO_L1_WS_PROVIDER")]
+    #[clap(
+        long,
+        env = "ESPRESSO_DEMO_L1_WS_PROVIDER",
+        default_value = "ws://localhost:8545"
+    )]
     pub l1_ws_provider: Url,
 
     /// Address of HotShot contract on layer 1.
-    #[clap(long, env = "ESPRESSO_DEMO_HOTSHOT_ADDRESS")]
+    #[clap(
+        long,
+        env = "ESPRESSO_DEMO_HOTSHOT_ADDRESS",
+        default_value = "0x0116686e2291dbd5e317f47fadbfb43b599786ef"
+    )]
     pub hotshot_address: Address,
 
     /// Mnemonic phrase for the rollup wallet.
     ///
     /// This is the wallet that will be used to send batch proofs of transaction validity to the rollup
     /// contract. It must be funded with ETH on the layer 1.
-    #[clap(long, env = "ESPRESSO_DEMO_ROLLUP_MNEMONIC")]
+    #[clap(
+        long,
+        env = "ESPRESSO_DEMO_ROLLUP_MNEMONIC",
+        default_value = "test test test test test test test test test test test junk"
+    )]
     pub rollup_mnemonic: String,
 
     /// Index of a funded account derived from mnemonic, desginating the account
