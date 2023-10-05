@@ -48,7 +48,7 @@ We first need to start a local Espresso Sequencer network.
 
 Once that is finished deploy the example rollup, it can be run natively or with docker.
 
-To run the demo inside docker run the following instead
+To run the demo inside docker run the following
 
     docker compose pull
     docker compose up
