@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Espresso Systems (espressosys.com)
+// This file is part of the sequencer-example-l2 repository.
+
+// You should have received a copy of the MIT License
+// along with the sequencer-example-l2 repository. If not, see <https://mit-license.org/>.
+
 use crate::prover::BatchProof;
 use async_compatibility_layer::async_primitives::broadcast::BroadcastSender;
 use async_std::sync::RwLock;

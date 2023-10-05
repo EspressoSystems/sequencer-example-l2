@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Espresso Systems (espressosys.com)
+// This file is part of the sequencer-example-l2 repository.
+
+// You should have received a copy of the MIT License
+// along with the sequencer-example-l2 repository. If not, see <https://mit-license.org/>.
+
 use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
 use async_std::sync::RwLock;
 use clap::Parser;
