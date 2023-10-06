@@ -8,7 +8,6 @@ use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
 use async_std::sync::RwLock;
 use clap::Parser;
 use commit::Committable;
-use contract_bindings::TestL1System;
 use ethers::signers::{LocalWallet, Signer};
 use example_l2::{
     api::{serve, APIOptions},
@@ -19,6 +18,7 @@ use example_l2::{
     Options, RollupVM,
 };
 use futures::join;
+use hotshot_contract_bindings::TestL1System;
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use std::sync::Arc;

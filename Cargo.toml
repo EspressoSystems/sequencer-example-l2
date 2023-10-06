@@ -12,18 +12,19 @@ async-compatibility-layer = { git = "https://github.com/EspressoSystems/async-co
 async-std = { version = "1.12", features = ["attributes"] }
 clap = "4.3.10"
 commit = { git = "https://github.com/EspressoSystems/commit", tag = "0.2.2" }
-contract-bindings = { path = "../contract-bindings" }
+contract-bindings = { path = "./contract-bindings" }
 derive_more = "0.99.17"
 ethers = { version = "2.0.4", features = ["ws"] }
 futures = "0.3.28"
+hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "contract-bindings" }
 hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service" }
 jf-primitives = { git = "https://github.com/EspressoSystems/jellyfish", features = [
     "std",
 ] }
 rand = "0.8.5"
 rand_chacha = "0.3"
-sequencer = { path = "../sequencer", features = ["testing"] }
-sequencer-utils = { path = "../utils" }
+sequencer = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", features = ["testing"] }
+sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
 serde = "1.0.163"
 serde_json = "1.0.100"
 snafu = "0.7.4"
@@ -38,5 +39,13 @@ tracing = "0.1"
 derivative = "2.2"
 hotshot = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.4.14" }
 portpicker = "0.1.1"
-sequencer-utils = { path = "../utils" }
+sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
 tempfile = "3.7.1"
+
+[patch."https://github.com/EspressoSystems/hotshot"]
+hotshot = { git = "https://github.com/EspressoSystems//hotshot", branch = "ed/timeout-hotfix" }
+hotshot-orchestrator = { git = "https://github.com/EspressoSystems//hotshot", branch = "ed/timeout-hotfix" }
+hotshot-signature-key = { git = "https://github.com/EspressoSystems//hotshot", branch = "ed/timeout-hotfix" }
+hotshot-testing = { git = "https://github.com/EspressoSystems//hotshot", branch = "ed/timeout-hotfix" }
+hotshot-types = { git = "https://github.com/EspressoSystems//hotshot", branch = "ed/timeout-hotfix" }
+hotshot-web-server = { git = "https://github.com/EspressoSystems//hotshot", branch = "ed/timeout-hotfix" }

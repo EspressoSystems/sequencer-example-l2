@@ -9,12 +9,9 @@ use async_compatibility_layer::async_primitives::broadcast::BroadcastSender;
 use async_std::sync::RwLock;
 use async_std::task::sleep;
 use commit::Committable;
-use contract_bindings::{
-    example_rollup::{self, ExampleRollup},
-    hot_shot::NewBlocksFilter,
-    HotShot,
-};
+use contract_bindings::example_rollup::{self, ExampleRollup};
 use ethers::prelude::*;
+use hotshot_contract_bindings::{hot_shot::NewBlocksFilter, HotShot};
 use hotshot_query_service::availability::BlockHeaderQueryData;
 use sequencer::{api::NamespaceProofQueryData, Vm};
 use std::sync::Arc;
@@ -203,7 +200,7 @@ mod test {
         logging::{setup_backtrace, setup_logging},
     };
     use async_std::task::spawn;
-    use contract_bindings::{example_rollup::StateUpdateFilter, TestL1System};
+    use contract_bindings::example_rollup::StateUpdateFilter;
     use derivative::Derivative;
     use ethers::prelude::k256::ecdsa::SigningKey;
     use ethers::providers::{Middleware, Provider};
@@ -213,6 +210,7 @@ mod test {
         stream, FutureExt, Stream,
     };
     use hotshot::types::SystemContextHandle;
+    use hotshot_contract_bindings::TestL1System;
     use portpicker::pick_unused_port;
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;

@@ -37,24 +37,31 @@ On Windows follow these steps instead.
 
 Note that we haven't tested on windows, please open an issue if you're running into problems.
 
-### With Docker
+### Running the Example Rollup on the Espresso Sequencer
 
-1. Pull the latest version of the demo: `docker compose pull`
-2. Start the demo: `docker compose up`. Alternatively, to start a fresh demo from scratch run
-   `docker compose up --force-recreate`.
-3. Stop the demo: `docker compose down`
+We first need to start a local Espresso Sequencer network.
 
-### Natively
+    git clone https://github.com/EspressoSystems/espresso-sequencer
+    cd espresso-sequencer
+    docker compose pull
+    docker compose up -d --wait
 
-Make sure nix is installed. See instructions [here](https://github.com/EspressoSystems/espresso-sequencer#development).
+Once that is finished deploy the example rollup, it can be run natively or with docker.
 
-1. Build all executables: `cargo build --release`
-2. Run the orchestrator: `just dev-orchestrator`
-3. Run the DA web server: `just dev-da-server`
-4. Run the consensus web server: `just dev-consensus-server`
-5. Run the sequencer: `just dev-sequencer`
-6. Run a test Anvil node: `anvil`
-7. Once the Sequencer HotShot network is running (there is a 10 second delay), run the demo: `just dev-demo`
+To run the demo inside docker run the following
+
+    docker compose pull
+    docker compose up
+
+To stop the docker demo run `docker compose down`.
+
+To run natively a rust toolchain is required. We provide a nix shell to install
+all dependencies. Nix can be installed via the
+[nix-installer](https://github.com/DeterminateSystems/nix-installer). Once
+installed run
+
+    nix develop
+    just dev-demo
 
 ### Interacting with the Demo
 
@@ -135,7 +142,7 @@ single example rollup transaction.
 6. The executor posts the proof to the rollup contract.
 7. The rollup contract verifies the proof by querying the latest certified block commitment from the sequencer contract.
    If the proof is valid, the contract updates its state commitment.
-8. Bob queries his balance using the the rollup API, and sees that he has received some new tokens. If this were a real
+8. Bob queries his balance using the rollup API, and sees that he has received some new tokens. If this were a real
    rollup, a potentially distrustful Bob could verify his balance against the rollup contract state commitment (the
    example does not currently include this feature).
 
