@@ -678,22 +678,6 @@ dependencies = [
 [[package]]
 name = "async-compatibility-layer"
 version = "1.0.0"
-source = "git+https://github.com/EspressoSystems/async-compatibility-layer?tag=1.3.0#f5478b9b33b8c5b81bfc029c84de9079fc8a64f7"
-dependencies = [
- "async-channel",
- "async-lock",
- "async-std",
- "async-trait",
- "color-eyre",
- "futures",
- "tracing",
- "tracing-error",
- "tracing-subscriber 0.3.17",
-]
-
-[[package]]
-name = "async-compatibility-layer"
-version = "1.0.0"
 source = "git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.1#568122b0ef39648daee91d16546985d41c3b0b15"
 dependencies = [
  "async-channel",
@@ -701,7 +685,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "color-eyre",
- "console-subscriber",
+ "console-subscriber 0.1.10",
  "flume 0.11.0",
  "futures",
  "tokio",
@@ -714,21 +698,20 @@ dependencies = [
 [[package]]
 name = "async-compatibility-layer"
 version = "1.0.0"
-source = "git+https://github.com/EspressoSystems/async-compatibility-layer#7babe43abb77a8081f15846f1b59a8deffc31edc"
+source = "git+https://github.com/EspressoSystems/async-compatibility-layer#5aa6d90aaaf07ff1dea5563a97c0dca39736ec69"
 dependencies = [
  "async-channel",
  "async-lock",
  "async-std",
  "async-trait",
  "color-eyre",
- "console-subscriber",
+ "console-subscriber 0.2.0",
  "flume 0.11.0",
  "futures",
  "tokio",
  "tokio-stream",
  "tracing",
  "tracing-error",
- "tracing-subscriber 0.3.17",
 ]
 
 [[package]]
@@ -1655,9 +1638,22 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2895653b4d9f1538a83970077cb01dfc77a4810524e51a110944688e916b18e"
 dependencies = [
- "prost",
- "prost-types",
- "tonic",
+ "prost 0.11.9",
+ "prost-types 0.11.9",
+ "tonic 0.9.2",
+ "tracing-core",
+]
+
+[[package]]
+name = "console-api"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd326812b3fd01da5bb1af7d340d0d555fd3d4b641e7f1dfcf5962a902952787"
+dependencies = [
+ "futures-core",
+ "prost 0.12.1",
+ "prost-types 0.12.1",
+ "tonic 0.10.2",
  "tracing-core",
 ]
 
@@ -1667,19 +1663,43 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4cf42660ac07fcebed809cfe561dd8730bcd35b075215e6479c516bcd0d11cb"
 dependencies = [
- "console-api",
+ "console-api 0.5.0",
  "crossbeam-channel",
  "crossbeam-utils",
  "futures",
  "hdrhistogram",
  "humantime",
- "prost-types",
+ "prost-types 0.11.9",
  "serde",
  "serde_json",
  "thread_local",
  "tokio",
  "tokio-stream",
- "tonic",
+ "tonic 0.9.2",
+ "tracing",
+ "tracing-core",
+ "tracing-subscriber 0.3.17",
+]
+
+[[package]]
+name = "console-subscriber"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7481d4c57092cd1c19dd541b92bdce883de840df30aa5d03fd48a3935c01842e"
+dependencies = [
+ "console-api 0.6.0",
+ "crossbeam-channel",
+ "crossbeam-utils",
+ "futures-task",
+ "hdrhistogram",
+ "humantime",
+ "prost-types 0.12.1",
+ "serde",
+ "serde_json",
+ "thread_local",
+ "tokio",
+ "tokio-stream",
+ "tonic 0.10.2",
  "tracing",
  "tracing-core",
  "tracing-subscriber 0.3.17",
@@ -1731,19 +1751,9 @@ dependencies = [
 [[package]]
 name = "contract-bindings"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/espresso-sequencer.git#4deec825be610bfb0fa12babec16fc90e02923c4"
+source = "git+https://github.com/EspressoSystems/espresso-sequencer.git#c86b7c47d0feff85e5026f996ff189067eb7a8ca"
 dependencies = [
- "anyhow",
- "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer?tag=1.3.0)",
- "async-std",
- "async-trait",
  "ethers",
- "ethers-solc",
- "glob",
- "hex",
- "serde_json",
- "tracing",
- "tracing-subscriber 0.3.17",
 ]
 
 [[package]]
@@ -3599,9 +3609,9 @@ dependencies = [
 [[package]]
 name = "hotshot-query-service"
 version = "0.0.7"
-source = "git+https://github.com/EspressoSystems/hotshot-query-service#1e5633a0df180a24d9ffe77b9df41ebf0168fa94"
+source = "git+https://github.com/EspressoSystems/hotshot-query-service#edbb0857e7595312dd042d130f6f21cbaf8a761c"
 dependencies = [
- "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer)",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.1)",
  "async-std",
  "atomic_store",
  "bincode",
@@ -3614,7 +3624,7 @@ dependencies = [
  "hotshot",
  "hotshot-signature-key",
  "hotshot-types",
- "hotshot-utils 0.1.0 (git+https://github.com/EspressoSystems/hotshot?tag=0.4.14)",
+ "hotshot-utils 0.1.0 (git+https://github.com/EspressoSystems/hotshot?branch=main)",
  "itertools 0.11.0",
  "prometheus",
  "serde",
@@ -3774,7 +3784,7 @@ dependencies = [
 [[package]]
 name = "hotshot-utils"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/hotshot?tag=0.4.14#f92e68aaade1794f8ba99dc67c7fc8869948d328"
+source = "git+https://github.com/EspressoSystems//hotshot?branch=ed/timeout-hotfix#d4cb5d0c32141f9591524f67fa61590ab9ca1da9"
 dependencies = [
  "bincode",
 ]
@@ -3782,7 +3792,7 @@ dependencies = [
 [[package]]
 name = "hotshot-utils"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems//hotshot?branch=ed/timeout-hotfix#d4cb5d0c32141f9591524f67fa61590ab9ca1da9"
+source = "git+https://github.com/EspressoSystems/hotshot?branch=main#4da489b84f805509492a08b13ce372b038d32b92"
 dependencies = [
  "bincode",
 ]
@@ -4247,7 +4257,7 @@ checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
 [[package]]
 name = "jf-primitives"
 version = "0.4.0-pre.0"
-source = "git+https://github.com/EspressoSystems/jellyfish#1626a8448e7af8ea153241004375deff9fd961da"
+source = "git+https://github.com/EspressoSystems/jellyfish#5c74b9a0a3cd6909fe9d10cbff61057ff705fb6d"
 dependencies = [
  "anyhow",
  "ark-bls12-377",
@@ -4291,7 +4301,7 @@ dependencies = [
 [[package]]
 name = "jf-relation"
 version = "0.4.0-pre.0"
-source = "git+https://github.com/EspressoSystems/jellyfish#1626a8448e7af8ea153241004375deff9fd961da"
+source = "git+https://github.com/EspressoSystems/jellyfish#5c74b9a0a3cd6909fe9d10cbff61057ff705fb6d"
 dependencies = [
  "ark-bls12-377",
  "ark-bls12-381 0.4.0",
@@ -4317,7 +4327,7 @@ dependencies = [
 [[package]]
 name = "jf-utils"
 version = "0.4.0-pre.0"
-source = "git+https://github.com/EspressoSystems/jellyfish#1626a8448e7af8ea153241004375deff9fd961da"
+source = "git+https://github.com/EspressoSystems/jellyfish#5c74b9a0a3cd6909fe9d10cbff61057ff705fb6d"
 dependencies = [
  "ark-ec 0.4.2",
  "ark-ff 0.4.2",
@@ -6236,7 +6246,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b82eaa1d779e9a4bc1c3217db8ffbeabaae1dca241bf70183242128d48681cd"
 dependencies = [
  "bytes 1.5.0",
- "prost-derive",
+ "prost-derive 0.11.9",
+]
+
+[[package]]
+name = "prost"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4fdd22f3b9c31b53c060df4a0613a1c7f062d4115a2b984dd15b1858f7e340d"
+dependencies = [
+ "bytes 1.5.0",
+ "prost-derive 0.12.1",
 ]
 
 [[package]]
@@ -6253,12 +6273,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost-derive"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "265baba7fabd416cf5078179f7d2cbeca4ce7a9041111900675ea7c4cb8a4c32"
+dependencies = [
+ "anyhow",
+ "itertools 0.11.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.37",
+]
+
+[[package]]
 name = "prost-types"
 version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "213622a1460818959ac1181aaeb2dc9c7f63df720db7d788b3e24eacd1983e13"
 dependencies = [
- "prost",
+ "prost 0.11.9",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e081b29f63d83a4bc75cfc9f3fe424f9156cf92d8a4f0c9407cce9a1b67327cf"
+dependencies = [
+ "prost 0.12.1",
 ]
 
 [[package]]
@@ -6991,12 +7033,12 @@ checksum = "cd0b0ec5f1c1ca621c432a25813d8d60c88abe6d3e08a3eb9cf37d97a0fe3d73"
 [[package]]
 name = "sequencer"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/espresso-sequencer.git#4deec825be610bfb0fa12babec16fc90e02923c4"
+source = "git+https://github.com/EspressoSystems/espresso-sequencer.git#c86b7c47d0feff85e5026f996ff189067eb7a8ca"
 dependencies = [
  "anyhow",
  "ark-bls12-381 0.3.0",
  "ark-serialize 0.4.2",
- "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer)",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.1)",
  "async-std",
  "async-trait",
  "bincode",
@@ -7035,11 +7077,13 @@ dependencies = [
 [[package]]
 name = "sequencer-utils"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/espresso-sequencer.git#4deec825be610bfb0fa12babec16fc90e02923c4"
+source = "git+https://github.com/EspressoSystems/espresso-sequencer.git#c86b7c47d0feff85e5026f996ff189067eb7a8ca"
 dependencies = [
+ "anyhow",
  "ark-serialize 0.3.0",
  "async-std",
  "commit",
+ "contract-bindings 0.1.0 (git+https://github.com/EspressoSystems/espresso-sequencer.git)",
  "ethers",
  "portpicker",
  "surf",
@@ -8354,7 +8398,34 @@ dependencies = [
  "hyper-timeout",
  "percent-encoding",
  "pin-project",
- "prost",
+ "prost 0.11.9",
+ "tokio",
+ "tokio-stream",
+ "tower",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "tonic"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d560933a0de61cf715926b9cac824d4c883c2c43142f787595e48280c40a1d0e"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "axum",
+ "base64 0.21.4",
+ "bytes 1.5.0",
+ "h2",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-timeout",
+ "percent-encoding",
+ "pin-project",
+ "prost 0.12.1",
  "tokio",
  "tokio-stream",
  "tower",
