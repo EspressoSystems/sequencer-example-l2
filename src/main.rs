@@ -18,9 +18,9 @@ use example_l2::{
     Options, RollupVM,
 };
 use futures::join;
-use hotshot_contract_bindings::TestL1System;
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
+use sequencer_utils::test_utils::TestL1System;
 use std::sync::Arc;
 use strum::IntoEnumIterator;
 

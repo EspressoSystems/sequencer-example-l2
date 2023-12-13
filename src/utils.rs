@@ -10,10 +10,10 @@ use crate::state::State;
 use commit::Commitment;
 use contract_bindings::example_rollup::ExampleRollup;
 use ethers::{prelude::*, providers::Provider};
-use hotshot_contract_bindings::{EthMiddleware, TestL1System};
-use sequencer_utils::commitment_to_u256;
+use sequencer_utils::{commitment_to_u256, test_utils::TestL1System, Signer};
 use surf_disco::Url;
-pub type ExampleRollupContract = ExampleRollup<EthMiddleware>;
+
+pub type ExampleRollupContract = ExampleRollup<Signer>;
 
 pub async fn deploy_example_contract(
     test_l1: &TestL1System,
