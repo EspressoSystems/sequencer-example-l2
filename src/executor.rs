@@ -210,7 +210,7 @@ mod test {
         testing::{init_hotshot_handles, wait_for_decide_on_handle},
         Node, SeqTypes, Vm, VmId,
     };
-    use sequencer_utils::{commitment_to_u256, test_utils::TestL1System, AnvilOptions};
+    use sequencer_utils::{commitment_to_u256, test_utils::TestL1System, Anvil, AnvilOptions};
     use std::path::PathBuf;
     use std::time::Duration;
     use surf_disco::{Client, Url};
@@ -396,13 +396,31 @@ mod test {
             .unwrap();
     }
 
+    async fn spawn_anvil() -> Anvil {
+        let anvil = AnvilOptions::default()
+            .block_time(Duration::from_secs(1))
+            .spawn()
+            .await;
+
+        // When we are running a local Anvil node, as in tests, some endpoints (e.g. eth_feeHistory)
+        // do not work until at least one block has been mined. Wait until the fee history endpoint
+        // works.
+        let provider = create_provider(&anvil.url());
+        while let Err(err) = provider.fee_history(1, BlockNumber::Latest, &[]).await {
+            tracing::warn!("RPC is not ready: {err}");
+            sleep(Duration::from_secs(1)).await;
+        }
+
+        anvil
+    }
+
     const TEST_MNEMONIC: &str = "test test test test test test test test test test test junk";
     #[async_std::test]
     async fn test_execute() {
         setup_logging();
         setup_backtrace();
 
-        let anvil = AnvilOptions::default().spawn().await;
+        let anvil = spawn_anvil().await;
         let alice = LocalWallet::new(&mut ChaChaRng::seed_from_u64(0));
         let bob = LocalWallet::new(&mut ChaChaRng::seed_from_u64(1));
 
@@ -480,7 +498,7 @@ mod test {
         setup_logging();
         setup_backtrace();
 
-        let anvil = AnvilOptions::default().spawn().await;
+        let anvil = spawn_anvil().await;
         let alice = LocalWallet::new(&mut ChaChaRng::seed_from_u64(0));
         let bob = LocalWallet::new(&mut ChaChaRng::seed_from_u64(1));
         // Deploy hotshot contract
@@ -581,7 +599,7 @@ mod test {
         let bob = LocalWallet::new(&mut ChaChaRng::seed_from_u64(1));
 
         // Start a test HotShot and Rollup contract.
-        let mut anvil = AnvilOptions::default().spawn().await;
+        let mut anvil = spawn_anvil().await;
         let provider = create_provider(&anvil.url());
         let test_l1 = TestL1System::deploy(provider).await.unwrap();
         let mut test_rollup =
