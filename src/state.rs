@@ -135,10 +135,7 @@ impl State {
         let Account {
             balance: destination_balance,
             ..
-        } = self
-            .accounts
-            .entry(destination)
-            .or_insert(Account::default());
+        } = self.accounts.entry(destination).or_default();
         *destination_balance += transfer_amount;
 
         tracing::info!("Applied transaction {next_nonce} for {sender}");

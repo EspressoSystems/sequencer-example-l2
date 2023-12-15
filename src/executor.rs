@@ -6,18 +6,14 @@
 
 use crate::prover::BatchProof;
 use async_compatibility_layer::async_primitives::broadcast::BroadcastSender;
-use async_std::sync::RwLock;
+use async_std::sync::{Arc, RwLock};
 use async_std::task::sleep;
 use commit::Committable;
 use contract_bindings::example_rollup::{self, ExampleRollup};
 use ethers::prelude::*;
-use hotshot_contract_bindings::{hot_shot::NewBlocksFilter, HotShot};
-use hotshot_query_service::availability::BlockHeaderQueryData;
-use sequencer::{api::NamespaceProofQueryData, Vm};
-use std::sync::Arc;
+use hotshot_contract_bindings::hot_shot::{HotShot, NewBlocksFilter};
+use sequencer::{api::endpoints::NamespaceProofQueryData, Header, Vm};
 use surf_disco::Url;
-
-use sequencer::SeqTypes;
 
 use sequencer_utils::{commitment_to_u256, connect_rpc, contract_send, u256_to_commitment};
 
@@ -72,7 +68,7 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         .await
         .expect("Unable to make websocket connection to L1");
 
-    let rollup_contract = ExampleRollup::new(*rollup_address, l1.clone());
+    let rollup_contract = ExampleRollup::new(*rollup_address, Arc::new(l1));
     let hotshot_contract = HotShot::new(*hotshot_address, Arc::new(socket_provider));
     let filter = hotshot_contract
         .new_blocks_filter()
@@ -86,9 +82,9 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         .await
         .expect("Unable to subscribe to L1 log stream");
 
-    let mut block_header_stream = hotshot
-        .socket("stream/block/headers/0")
-        .subscribe()
+    let mut header_stream = hotshot
+        .socket("stream/headers/0")
+        .subscribe::<Header>()
         .await
         .expect("Unable to subscribe to HotShot block header stream");
     let vm_id: u64 = state.read().await.vm.id().into();
@@ -105,9 +101,9 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
             }
         };
 
-        // When HotShot introduces optimistic DA, full block content may not be available immediately
-        // so wait for all blocks to be ready before building the batch proof
-        let headers: Vec<BlockHeaderQueryData<SeqTypes>> = block_header_stream
+        // Full block content may not be available immediately so wait for all blocks to be ready
+        // before building the batch proof
+        let headers: Vec<Header> = header_stream
             .by_ref()
             .take(num_blocks as usize)
             .map(|result| result.expect("Error fetching block header"))
@@ -122,7 +118,7 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
             first_block + num_blocks - 1,
             state.read().await.commit()
         );
-        for i in 0..num_blocks {
+        for (i, header) in headers.into_iter().enumerate() {
             let commitment = hotshot_contract
                 .commitments(first_block + i)
                 .call()
@@ -131,26 +127,20 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
             let block_commitment =
                 u256_to_commitment(commitment).expect("Unable to deserialize block commitment");
 
-            if headers[i as usize].hash() != block_commitment {
+            if header.commit() != block_commitment {
                 panic!("Block commitment does not match hash of received block, the executor cannot continue");
             }
 
             let namespace_proof_query: NamespaceProofQueryData = hotshot
                 .get(&format!(
                     "block/{}/namespace/{}",
-                    first_block.as_u64() + i,
+                    first_block.as_u64() + (i as u64),
                     vm_id
                 ))
                 .send()
                 .await
                 .unwrap();
-            let header = namespace_proof_query.header;
             let namespace_proof = namespace_proof_query.proof;
-
-            // Check that the NMT root is consistent with the HotShot block committment
-            let derived_block_comm = header.commit();
-
-            assert_eq!(derived_block_comm, block_commitment);
 
             let mut state = state.write().await;
             proofs.push(
@@ -160,7 +150,7 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
             );
             if let Some(stream) = &output_stream {
                 stream
-                    .send_async((first_block.as_u64() + i, state.clone()))
+                    .send_async((first_block.as_u64() + (i as u64), state.clone()))
                     .await
                     .ok();
             }
@@ -210,18 +200,17 @@ mod test {
         stream, FutureExt, Stream,
     };
     use hotshot::types::SystemContextHandle;
-    use hotshot_contract_bindings::TestL1System;
     use portpicker::pick_unused_port;
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sequencer::{
-        api::{HttpOptions, QueryOptions},
+        api::options::{Fs, Http, Options},
         hotshot_commitment::{run_hotshot_commitment_task, CommitmentTaskOptions},
         network,
         testing::{init_hotshot_handles, wait_for_decide_on_handle},
-        Node, Vm, VmId,
+        Node, SeqTypes, Vm, VmId,
     };
-    use sequencer_utils::{commitment_to_u256, AnvilOptions};
+    use sequencer_utils::{commitment_to_u256, test_utils::TestL1System, Anvil, AnvilOptions};
     use std::path::PathBuf;
     use std::time::Duration;
     use surf_disco::{Client, Url};
@@ -395,9 +384,10 @@ mod test {
         node: SystemContextHandle<SeqTypes, Node<N>>,
     ) {
         let init_handle = Box::new(move |_| (ready((node, 0)).boxed()));
-        sequencer::api::Options::from(HttpOptions { port })
+        Options::from(Http { port })
             .submit(Default::default())
-            .query(QueryOptions {
+            .status(Default::default())
+            .query_fs(Fs {
                 storage_path,
                 reset_store: true,
             })
@@ -406,13 +396,31 @@ mod test {
             .unwrap();
     }
 
+    async fn spawn_anvil() -> Anvil {
+        let anvil = AnvilOptions::default()
+            .block_time(Duration::from_secs(1))
+            .spawn()
+            .await;
+
+        // When we are running a local Anvil node, as in tests, some endpoints (e.g. eth_feeHistory)
+        // do not work until at least one block has been mined. Wait until the fee history endpoint
+        // works.
+        let provider = create_provider(&anvil.url());
+        while let Err(err) = provider.fee_history(1, BlockNumber::Latest, &[]).await {
+            tracing::warn!("RPC is not ready: {err}");
+            sleep(Duration::from_secs(1)).await;
+        }
+
+        anvil
+    }
+
     const TEST_MNEMONIC: &str = "test test test test test test test test test test test junk";
     #[async_std::test]
     async fn test_execute() {
         setup_logging();
         setup_backtrace();
 
-        let anvil = AnvilOptions::default().spawn().await;
+        let anvil = spawn_anvil().await;
         let alice = LocalWallet::new(&mut ChaChaRng::seed_from_u64(0));
         let bob = LocalWallet::new(&mut ChaChaRng::seed_from_u64(1));
 
@@ -490,7 +498,7 @@ mod test {
         setup_logging();
         setup_backtrace();
 
-        let anvil = AnvilOptions::default().spawn().await;
+        let anvil = spawn_anvil().await;
         let alice = LocalWallet::new(&mut ChaChaRng::seed_from_u64(0));
         let bob = LocalWallet::new(&mut ChaChaRng::seed_from_u64(1));
         // Deploy hotshot contract
@@ -591,7 +599,7 @@ mod test {
         let bob = LocalWallet::new(&mut ChaChaRng::seed_from_u64(1));
 
         // Start a test HotShot and Rollup contract.
-        let mut anvil = AnvilOptions::default().spawn().await;
+        let mut anvil = spawn_anvil().await;
         let provider = create_provider(&anvil.url());
         let test_l1 = TestL1System::deploy(provider).await.unwrap();
         let mut test_rollup =
@@ -653,7 +661,7 @@ mod test {
 
             // Wait for the transaction to be sequenced, before we can sequence the next one.
             tracing::info!("Waiting for txn {nonce} to be sequenced");
-            wait_for_decide_on_handle(&mut events, txn).await.unwrap();
+            wait_for_decide_on_handle(&mut events, &txn).await.unwrap();
         }
 
         // Wait for the rollup contract to process all state updates
