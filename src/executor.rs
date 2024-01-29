@@ -170,8 +170,8 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         );
         let proof = example_rollup::BatchProof::from(proof);
         let call = rollup_contract.verify_blocks(num_blocks, state_comm, proof);
-        while contract_send(&call).await.is_none() {
-            tracing::warn!("Failed to submit proof to contract, retrying");
+        while let Err(err) = contract_send(&call).await {
+            tracing::warn!("Failed to submit proof to contract, retrying: {err}");
             sleep(std::time::Duration::from_secs(1)).await;
         }
     }
@@ -204,9 +204,11 @@ mod test {
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sequencer::{
-        api::options::{Fs, Http, Options},
+        api::options::{Http, Options},
+        context::SequencerContext,
         hotshot_commitment::{run_hotshot_commitment_task, CommitmentTaskOptions},
         network,
+        persistence::fs,
         testing::{init_hotshot_handles, wait_for_decide_on_handle},
         Node, SeqTypes, Vm, VmId,
     };
@@ -383,14 +385,20 @@ mod test {
         storage_path: PathBuf,
         node: SystemContextHandle<SeqTypes, Node<N>>,
     ) {
-        let init_handle = Box::new(move |_| (ready((node, 0)).boxed()));
+        let init_handle = Box::new(move |_| {
+            ready(SequencerContext::new(
+                node,
+                0,
+                Default::default(),
+                Default::default(),
+                None,
+            ))
+            .boxed()
+        });
         Options::from(Http { port })
             .submit(Default::default())
             .status(Default::default())
-            .query_fs(Fs {
-                storage_path,
-                reset_store: true,
-            })
+            .query_fs(Default::default(), fs::Options { path: storage_path })
             .serve(init_handle)
             .await
             .unwrap();
@@ -466,6 +474,7 @@ mod test {
             hotshot_address: test_l1.hotshot.address(),
             l1_chain_id: None,
             query_service_url: Some(sequencer_url.clone()),
+            delay: None,
         };
 
         let rollup_opt = ExecutorOptions {
@@ -557,6 +566,7 @@ mod test {
             hotshot_address: test_l1.hotshot.address(),
             l1_chain_id: None,
             query_service_url: Some(sequencer_url.clone()),
+            delay: None,
         };
         spawn(async move { run_hotshot_commitment_task(&hotshot_opt).await });
 
@@ -634,6 +644,7 @@ mod test {
             hotshot_address: test_l1.hotshot.address(),
             l1_chain_id: None,
             query_service_url: Some(sequencer_url.clone()),
+            delay: None,
         };
 
         let rollup_opt = ExecutorOptions {

@@ -19,7 +19,7 @@ derive_more = "0.99.17"
 ethers = { version = "2.0.4", features = ["ws"] }
 futures = "0.3.28"
 hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "contract-bindings" }
-hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service" }
+hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service", branch = "main" }
 jf-primitives = { git = "https://github.com/EspressoSystems/jellyfish", features = [
     "std",
 ] }
@@ -32,14 +32,14 @@ serde_json = "1.0.100"
 snafu = "0.7.4"
 strum = "0.25.0"
 strum_macros = "0.25.1"
-surf-disco = { git = "https://github.com/EspressoSystems/surf-disco", tag = "v0.4.3-patch.2" }
-tide-disco = { git = "https://github.com/EspressoSystems/tide-disco", tag = "v0.4.3" }
+surf-disco = { git = "https://github.com/EspressoSystems/surf-disco", tag = "v0.4.6" }
+tide-disco = { git = "https://github.com/EspressoSystems/tide-disco", tag = "v0.4.6" }
 toml = "0.8"
 tracing = "0.1"
 
 [dev-dependencies]
 derivative = "2.2"
-hotshot = { git = "https://github.com/EspressoSystems/hotshot", rev = "0034ca55e1ebb9fb9cae4dfc3941cd5ebf1637ab" }
+hotshot = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.8" }
 portpicker = "0.1.1"
 sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
 tempfile = "3.7.1"
