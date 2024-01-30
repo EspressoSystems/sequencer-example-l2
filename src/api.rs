@@ -113,7 +113,9 @@ mod tests {
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sequencer::{
-        api::options::{Fs, Http, Options},
+        api::options::{Http, Options},
+        context::SequencerContext,
+        persistence::fs,
         testing::wait_for_decide_on_handle,
         Transaction as SeqTransaction,
     };
@@ -164,15 +166,21 @@ mod tests {
         let mut events = api_node.get_event_stream(Default::default()).await.0;
         let tmp_dir = TempDir::new().unwrap();
         let storage_path = tmp_dir.path().join("tmp_storage");
-        let init_handle = Box::new(move |_| (ready((api_node, 0)).boxed()));
+        let init_handle = Box::new(move |_| {
+            ready(SequencerContext::new(
+                api_node,
+                0,
+                Default::default(),
+                Default::default(),
+                None,
+            ))
+            .boxed()
+        });
         Options::from(Http {
             port: sequencer_port,
         })
         .submit(Default::default())
-        .query_fs(Fs {
-            storage_path,
-            reset_store: true,
-        })
+        .query_fs(Default::default(), fs::Options { path: storage_path })
         .serve(init_handle)
         .await
         .unwrap();
