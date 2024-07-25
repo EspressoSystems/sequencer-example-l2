@@ -148,7 +148,7 @@ single example rollup transaction.
 
 ## Rollup Architecture
 
-**[Rollup State](https://github.com/EspressoSystems/espresso-sequencer/blob/main/example-l2/src/state.rs)**
+**[Rollup State](https://github.com/EspressoSystems/espresso-sequencer/blob/a31c0bca53e2b46e47f913085e0cf3efe56bdcc6/sequencer/src/state.rs#L4)**
 
 The state of the example rollup consists of:
 
@@ -158,20 +158,20 @@ The state of the example rollup consists of:
   execution step.
 - **VM**: Information about the Rollup VM. Right now, this is a simple ID.
 
-**[Executor](https://github.com/EspressoSystems/espresso-sequencer/blob/main/example-l2/src/executor.rs)**
+**[Executor](https://github.com/EspressoSystems/sequencer-example-l2/blob/d703b06ef59e85b7741a87d7ea997abbbe7c96ed/src/executor.rs#L4)** 
 
 The executor is a service responsible for subscribing to block commitments posted to the L1 contract, applying
 transactions to the rollup state, and submitting
-[mock proofs](https://github.com/EspressoSystems/espresso-sequencer/blob/main/example-l2/src/prover.rs) to the rollup
+[mock proofs](https://github.com/EspressoSystems/sequencer-example-l2/blob/d703b06ef59e85b7741a87d7ea997abbbe7c96ed/src/prover.rs#L4) to the rollup
 contract. Rollups often separate the roles of executor and prover into two distinct services, but this example combines
 them for the sake of simplicity.
 
-**[Rollup API](https://github.com/EspressoSystems/espresso-sequencer/blob/main/example-l2/src/api.rs)**
+**[Rollup API](https://github.com/EspressoSystems/espresso-sequencer/blob/a31c0bca53e2b46e47f913085e0cf3efe56bdcc6/sequencer/src/api.rs#L4)**
 
 The rollup API is a REST API that includes a `submit` and `query` endpoint. With the containerized example rollup
 running, visit http://localhost:8082/ for API documentation.
 
-**[Rollup Contract](https://github.com/EspressoSystems/espresso-sequencer/blob/main/contracts/src/ExampleRollup.sol)**
+**[Rollup Contract](https://github.com/EspressoSystems/sequencer-example-l2/blob/d703b06ef59e85b7741a87d7ea997abbbe7c96ed/contracts/src/ExampleRollup.sol#L4)**
 
 The rollup contract stores the most recent rollup state commitment. The contract updates the state commitment when it
 receives a valid state transition proof from the executor.
