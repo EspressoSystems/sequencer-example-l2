@@ -98,7 +98,7 @@ impl State {
     /// 1) The signature on the transaction
     /// 2) The nonce of the transaction is greater than the sender nonce (this prevent replay attacks)
     /// 3) The sender has a high enough balance to cover the transfer amount
-    pub fn apply_transaction(&mut self, transaction_payload: &&[u8]) -> Result<(), RollupError> {
+    pub fn apply_transaction(&mut self, transaction_payload: &[u8]) -> Result<(), RollupError> {
         // convert transaction_payload to signed transaction
         let transaction = SignedTransaction::decode(transaction_payload);
 
@@ -172,7 +172,7 @@ impl State {
         let transactions = namespace_proof.clone().unwrap().export_all_txs(&self.vm.0);
         for txn in transactions {
             // convert transaction to signed transaction
-            let res = self.apply_transaction(&txn.payload());
+            let res = self.apply_transaction(txn.payload());
             if let Err(err) = res {
                 tracing::error!("Transaction invalid: {}", err)
             }
@@ -190,59 +190,63 @@ impl State {
         )
     }
 }
-// #[cfg(test)]
-// mod tests {
-//     use crate::transaction::Transaction;
-//
-//     use ethers::signers::{LocalWallet, Signer};
-//
-//     use super::*;
-//     #[async_std::test]
-//     async fn smoke_test() {
-//         let mut rng = rand::thread_rng();
-//         let vm = RollupVM::new(1.into());
-//         let alice = LocalWallet::new(&mut rng);
-//         let bob = LocalWallet::new(&mut rng);
-//         let seed_data = [(alice.address(), 100), (bob.address(), 100)];
-//         let mut state = State::from_initial_balances(seed_data, vm);
-//         let mut transaction = Transaction {
-//             amount: 110,
-//             destination: bob.address(),
-//             nonce: 1,
-//         };
-//
-//         // Try to overspend
-//         let mut signed_transaction = SignedTransaction::new(transaction.clone(), &alice).await;
-//         let err = state
-//             .apply_transaction(&signed_transaction)
-//             .expect_err("Invalid transaction should throw error.");
-//         assert_eq!(
-//             err,
-//             RollupError::InsufficientBalance {
-//                 address: alice.address()
-//             }
-//         );
-//
-//         // Now spend an valid amount
-//         transaction.amount = 50;
-//         signed_transaction = SignedTransaction::new(transaction, &alice).await;
-//         state
-//             .apply_transaction(&signed_transaction)
-//             .expect("Valid transaction should transition state");
-//         let bob_balance = state.get_balance(&bob.address());
-//         assert_eq!(bob_balance, 150);
-//
-//         // Now try to replay the transaction
-//         let err = state
-//             .apply_transaction(&signed_transaction)
-//             .expect_err("Invalid transaction should throw error.");
-//         assert_eq!(
-//             err,
-//             RollupError::InvalidNonce {
-//                 address: alice.address(),
-//                 expected: 2,
-//                 actual: 1,
-//             }
-//         );
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use crate::transaction::Transaction;
+    use espresso_types::NamespaceId;
+
+    use ethers::signers::{LocalWallet, Signer};
+
+    use super::*;
+    #[async_std::test]
+    async fn smoke_test() {
+        let mut rng = rand::thread_rng();
+        let vm = RollupVM::new(NamespaceId::from(1_u64));
+        let alice = LocalWallet::new(&mut rng);
+        let bob = LocalWallet::new(&mut rng);
+        let seed_data = [(alice.address(), 100), (bob.address(), 100)];
+        let mut state = State::from_initial_balances(seed_data, vm);
+        let mut transaction = Transaction {
+            amount: 110,
+            destination: bob.address(),
+            nonce: 1,
+        };
+
+        // Try to overspend
+        let mut signed_transaction = SignedTransaction::new(transaction.clone(), &alice).await;
+        let transaction_payload = SignedTransaction::encode(&signed_transaction);
+        let err = state
+            .apply_transaction(&transaction_payload)
+            .expect_err("Invalid transaction should throw error.");
+        assert_eq!(
+            err,
+            RollupError::InsufficientBalance {
+                address: alice.address()
+            }
+        );
+
+        // Now spend an valid amount
+        transaction.amount = 50;
+        signed_transaction = SignedTransaction::new(transaction, &alice).await;
+        let transaction_payload = SignedTransaction::encode(&signed_transaction);
+        state
+            .apply_transaction(&transaction_payload)
+            .expect("Valid transaction should transition state");
+        let bob_balance = state.get_balance(&bob.address());
+        assert_eq!(bob_balance, 150);
+
+        // Now try to replay the transaction
+        let transaction_payload = SignedTransaction::encode(&signed_transaction);
+        let err = state
+            .apply_transaction(&transaction_payload)
+            .expect_err("Invalid transaction should throw error.");
+        assert_eq!(
+            err,
+            RollupError::InvalidNonce {
+                address: alice.address(),
+                expected: 2,
+                actual: 1,
+            }
+        );
+    }
+}
