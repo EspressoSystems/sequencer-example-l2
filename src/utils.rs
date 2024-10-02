@@ -7,7 +7,7 @@
 use std::time::Duration;
 
 use crate::state::State;
-use commit::Commitment;
+use committable::Commitment;
 use contract_bindings::example_rollup::ExampleRollup;
 use ethers::{prelude::*, providers::Provider};
 use sequencer_utils::{commitment_to_u256, test_utils::TestL1System, Signer};

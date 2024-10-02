@@ -13,16 +13,15 @@ async-compatibility-layer = { git = "https://github.com/EspressoSystems/async-co
 ] }
 async-std = { version = "1.12", features = ["attributes"] }
 clap = "4.4"
-commit = { git = "https://github.com/EspressoSystems/commit" }
+committable = "0.2"
 contract-bindings = { path = "./contract-bindings" }
 derive_more = "0.99.17"
+espresso_types = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "espresso-types" }
 ethers = { version = "2.0.4", features = ["ws"] }
 futures = "0.3.28"
 hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "contract-bindings" }
 hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service", branch = "main" }
-jf-primitives = { git = "https://github.com/EspressoSystems/jellyfish", features = [
-    "std",
-] }
+jf_merkle_tree = { git = "https://github.com/EspressoSystems/jellyfish", package = "jf-merkle-tree" }
 rand = "0.8.5"
 rand_chacha = "0.3"
 sequencer = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", features = ["testing"] }
@@ -39,7 +38,7 @@ tracing = "0.1"
 
 [dev-dependencies]
 derivative = "2.2"
-hotshot = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.8" }
+hotshot = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.76" }
 portpicker = "0.1.1"
 sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
 tempfile = "3.7.1"

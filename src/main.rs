@@ -7,7 +7,8 @@
 use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
 use async_std::sync::RwLock;
 use clap::Parser;
-use commit::Committable;
+use committable::Committable;
+use espresso_types::NamespaceId;
 use ethers::signers::{LocalWallet, Signer};
 use example_l2::{
     api::{serve, APIOptions},
@@ -30,7 +31,7 @@ async fn main() {
     setup_backtrace();
 
     let opt = Options::parse();
-    let vm = RollupVM::new(1.into());
+    let vm = RollupVM::new(NamespaceId::from(1_u64));
 
     let mut initial_balances = vec![];
     for identity in SeedIdentity::iter() {
