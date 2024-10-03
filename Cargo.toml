@@ -8,37 +8,40 @@ license = "MIT"
 
 [dependencies]
 ark-serialize = { version = "0.4", features = ["derive"] }
-async-compatibility-layer = { git = "https://github.com/EspressoSystems/async-compatibility-layer", tag = "1.4.1", features = [
+async-compatibility-layer = { version = "1.2.1", default-features = false, features = [
     "logging-utils",
 ] }
-async-std = { version = "1.12", features = ["attributes"] }
+async-std = { version = "1.12.0", features = ["attributes", "tokio1"] }
 clap = "4.4"
 committable = "0.2"
 contract-bindings = { path = "./contract-bindings" }
 derive_more = "0.99.17"
-espresso_types = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "espresso-types" }
+espresso_types = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "espresso-types", tag = "20240919-dev-node-legacy-builder" }
 ethers = { version = "2.0.4", features = ["ws"] }
 futures = "0.3.28"
-hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "contract-bindings" }
-hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service", branch = "main" }
+hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "contract-bindings", tag = "20240919-dev-node-legacy-builder" }
+hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service", tag = "0.1.57" }
 jf_merkle_tree = { git = "https://github.com/EspressoSystems/jellyfish", package = "jf-merkle-tree" }
 rand = "0.8.5"
 rand_chacha = "0.3"
-sequencer = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", features = ["testing"] }
-sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
-serde = "1.0.163"
-serde_json = "1.0.100"
+sequencer = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", features = ["testing"], tag = "20240919-dev-node-legacy-builder" }
+sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", tag = "20240919-dev-node-legacy-builder" }
+serde = { version = "1.0.195", features = ["derive"] }
+serde_json = "^1.0.113"
 snafu = "0.7.4"
 strum = "0.25.0"
 strum_macros = "0.25.1"
-surf-disco = { git = "https://github.com/EspressoSystems/surf-disco", tag = "v0.4.6" }
-tide-disco = { git = "https://github.com/EspressoSystems/tide-disco", tag = "v0.4.6" }
+surf-disco = { git = "https://github.com/EspressoSystems/surf-disco", tag = "v0.9.0" }
+tide-disco = { git = "https://github.com/EspressoSystems/tide-disco", tag = "v0.9.0" }
+tokio = "1.40.0"
 toml = "0.8"
 tracing = "0.1"
+vec1 = "1.12.1"
 
 [dev-dependencies]
 derivative = "2.2"
-hotshot = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.76" }
+hotshot = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.74", features = ["dependency-tasks"] }
+hotshot-types = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.74", package = "hotshot-types", version = "=0.1.11" }
 portpicker = "0.1.1"
-sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
+sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", tag = "20240919-dev-node-legacy-builder" }
 tempfile = "3.7.1"

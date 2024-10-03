@@ -29,7 +29,7 @@ pub struct Options {
     #[clap(
         long,
         env = "ESPRESSO_SEQUENCER_URL",
-        default_value = "http://localhost:24000/v0/"
+        default_value = "http://0.0.0.0:24000/v0/"
     )]
     pub sequencer_url: Url,
 
@@ -53,7 +53,7 @@ pub struct Options {
     #[clap(
         long,
         env = "ESPRESSO_DEMO_HOTSHOT_ADDRESS",
-        default_value = "0x0116686e2291dbd5e317f47fadbfb43b599786ef"
+        default_value = "0xb19b36b1456e65e3a6d514d3f715f204bd59f431"
     )]
     pub hotshot_address: Address,
 
