@@ -51,19 +51,19 @@ With the demo running, navigate to http://localhost:8082/ for API documentation.
 1. Query the genesis account balance:
 
 ```
-curl http://localhost:8082/rollup/balance/0xf23694f9c6d4837fc596c4eb7c3c3d8a8bae69ca
+curl http://localhost:8084/v0/rollup/balance/0xf23694f9c6d4837fc596c4eb7c3c3d8a8bae69ca
 ```
 
 2. Send tokens to `0x885ee92eebda03540066a25a57cc625bbee15d5a`:
 
 ```
-curl -X POST -H "Content-Type: application/json" http://localhost:8082/rollup/submit -d "{\"transaction\":{\"amount\":100,\"destination\":\"0x885ee92eebda03540066a25a57cc625bbee15d5a\",\"nonce\":1},\"signature\":{\"r\":\"0x61395b25cf41321bc1242ec301c0aa5a5e5ff47b697f80119a20ce3e5be66f9e\",\"s\":\"0x447cf03a5ddb28b9a189d108a8e91efa523fd3fb37cebab1cad610d82a8edbb0\",\"v\":27}}"
+curl -X POST -H "Content-Type: application/json" http://0.0.0.0:8084/v0/rollup/submit -d "{\"transaction\":{\"amount\":100,\"destination\":\"0x885ee92eebda03540066a25a57cc625bbee15d5a\",\"nonce\":1},\"signature\":{\"r\":\"0x61395b25cf41321bc1242ec301c0aa5a5e5ff47b697f80119a20ce3e5be66f9e\",\"s\":\"0x447cf03a5ddb28b9a189d108a8e91efa523fd3fb37cebab1cad610d82a8edbb0\",\"v\":27}}"
 ```
 
 3. Query `0x885ee92eebda03540066a25a57cc625bbee15d5a` balance:
 
 ```
-curl http://localhost:8082/rollup/balance/0x885ee92eebda03540066a25a57cc625bbee15d5a
+curl http://localhost:8084/v0/rollup/balance/0x885ee92eebda03540066a25a57cc625bbee15d5a
 ```
 
 ## Transaction Lifecycle
@@ -86,23 +86,23 @@ single example rollup transaction.
    by a sequencer node.
 5. The executor also listens for the headers of the new block that was sequenced on the hotshot network. It then fetches the
    namespace proof, vid common and block hash.
-6. The executor then [processes](https://github.com/EspressoSystems/espresso-sequencer/blob/main/example-l2/src/state.rs#L158) the
+6. The executor then processes the
    transactions, performing the following steps:
-7. The executor applies transactions to the VM state. Before application, each transaction is validated, and invalid
-   transactions are discarded (a real rollup would eventually include proofs of transaction invalidity). In our case,
-   the block contains a single transaction from Alice to Bob. Since the transaction contains a valid signature and
-   Alice has sufficient balance, the transaction is successfully applied and balances are updated.
-8. After transaction application, the executor updates the VM state with the new block commitment and previous state
-   commitment.
-9. The executor computes a new state commitment, and generates a mock proof that the state was updated correctly with
-   respect to the HotShot block commitment.
-10. The executor posts the proof to the rollup contract.
-11. The rollup contract verifies the proof by querying the latest certified block commitment from the sequencer contract.
-    Note: In our current implementation, we aren't doing much verification in the contract. For production purposes, the rollup contract
-    will need to do additional verifications with the light client state.
-12. Bob queries his balance using the rollup API, and sees that he has received some new tokens. If this were a real
-    rollup, a potentially distrustful Bob could verify his balance against the rollup contract state commitment (the
-    example does not currently include this feature).
+   - The executor applies transactions to the VM state. Before application, each transaction is validated, and invalid
+     transactions are discarded (a real rollup would eventually include proofs of transaction invalidity). In our case,
+     the block contains a single transaction from Alice to Bob. Since the transaction contains a valid signature and
+     Alice has sufficient balance, the transaction is successfully applied and balances are updated.
+   - After transaction application, the executor updates the VM state with the new block commitment and previous state
+     commitment.
+   - The executor computes a new state commitment, and generates a mock proof that the state was updated correctly with
+     respect to the HotShot block commitment.
+7. The executor posts the proof to the rollup contract.
+8. The rollup contract verifies the proof by querying the latest certified block commitment from the sequencer contract.
+   Note: In our current implementation, we aren't doing much verification in the contract. For production purposes, the rollup contract
+   will need to do additional verifications with the light client state.
+9. Bob queries his balance using the rollup API, and sees that he has received some new tokens. If this were a real
+   rollup, a potentially distrustful Bob could verify his balance against the rollup contract state commitment (the
+   example does not currently include this feature).
 
 ## Rollup Architecture
 

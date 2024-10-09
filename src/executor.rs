@@ -152,6 +152,7 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
     let namespace_id: NamespaceId = state.read().await.vm.into();
 
     while let Some(event) = commits_stream.next().await {
+        tracing::info!(" new state event received {:?}", event);
         let (_view_num, block_height, _block_comm_root) = match event {
             Ok(NewStateFilter {
                 view_num: _view_num,
@@ -232,9 +233,12 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
 
         let proof = example_rollup::BatchProof::from(proof);
         let call = rollup_contract.verify_blocks(block_height, state_comm, proof);
-        while let Err(err) = contract_send::<_, _, ExampleRollupErrors>(&call).await {
+        let res = contract_send::<_, _, ExampleRollupErrors>(&call).await;
+        if let Err(err) = res {
             tracing::warn!("Failed to submit proof to contract, retrying: {err}");
             sleep(Duration::from_secs(1)).await;
+        } else {
+            tracing::info!("Proof submitted successfully");
         }
     }
 }
