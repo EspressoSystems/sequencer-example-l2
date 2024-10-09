@@ -4,3 +4,6 @@
 [submodule "contracts/lib/hotshot"]
 	path = contracts/lib/hotshot
 	url = https://github.com/EspressoSystems/espresso-sequencer
+[submodule "contracts/lib/espresso-sequencer"]
+	path = contracts/lib/espresso-sequencer
+	url = https://github.com/EspressoSystems/espresso-sequencer

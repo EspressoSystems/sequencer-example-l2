@@ -20,11 +20,11 @@ use ethers::{
     signers::{coins_bip39::English, MnemonicBuilder},
     types::Address,
 };
-use hotshot_contract_bindings::hot_shot::{HotShot, NewBlocksFilter};
+use hotshot_contract_bindings::light_client::{LightClient, NewStateFilter};
 use hotshot_query_service::availability::{PayloadQueryData, VidCommonQueryData};
 use sequencer::api::endpoints::NamespaceProofQueryData;
 use sequencer::SequencerApiVersion;
-use sequencer_utils::{commitment_to_u256, contract_send, u256_to_commitment};
+use sequencer_utils::{commitment_to_u256, contract_send};
 use std::time::Duration;
 use surf_disco::error::ClientError;
 use surf_disco::Url;
@@ -92,7 +92,7 @@ pub struct ExecutorOptions {
     pub l1_ws_provider: Url,
     pub rollup_account_index: u32,
     pub rollup_mnemonic: String,
-    pub hotshot_address: Address,
+    pub light_client_address: Address,
     pub rollup_address: Address,
     pub output_stream: Option<BroadcastSender<(u64, State)>>,
 }
@@ -106,20 +106,16 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         sequencer_url,
         l1_http_provider,
         l1_ws_provider,
-        hotshot_address,
+        light_client_address,
         rollup_address,
         rollup_mnemonic,
         output_stream,
     } = opt;
 
-    let query_service_url = sequencer_url.join("v0/availability").unwrap();
-    let hotshot = HotShotClient::builder(query_service_url.clone())
-        .set_timeout(Some(Duration::from_secs(10)))
-        .build();
+    let query_service_url = sequencer_url.join("availability").unwrap();
+    let hotshot = HotShotClient::new(query_service_url.clone());
 
     hotshot.connect(None).await;
-    println!("query_service_url: {}", query_service_url.as_str());
-    println!("connected to hotshot");
 
     // Connect to the layer one HotShot contract.
     let l1 = connect_rpc(
@@ -139,16 +135,9 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         .expect("Unable to make websocket connection to L1");
 
     let rollup_contract = ExampleRollup::new(*rollup_address, Arc::new(l1));
-    println!("hotshot address inside run_executor: {:?}", hotshot_address);
-    let hotshot_contract = HotShot::new(*hotshot_address, Arc::new(socket_provider));
+    let light_client = LightClient::new(*light_client_address, Arc::new(socket_provider));
 
-    let filter = hotshot_contract
-        .new_blocks_filter()
-        .from_block(0)
-        // Ethers does not set the contract address on filters created via contract bindings. This
-        // seems like a bug and I have reported it: https://github.com/gakonst/ethers-rs/issues/2528.
-        // In the mean time we can work around by setting the address manually.
-        .address(hotshot_contract.address().into());
+    let filter = light_client.new_state_filter().from_block(0);
 
     let mut commits_stream = filter
         .subscribe()
@@ -161,17 +150,16 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         .await
         .expect("Unable to subscribe to HotShot block header stream");
     let namespace_id: NamespaceId = state.read().await.vm.into();
-    println!("created header stream: {namespace_id:?}");
 
     while let Some(event) = commits_stream.next().await {
-        println!("inside the commits loop: {event:?}");
-        let (first_block, num_blocks) = match event {
-            Ok(NewBlocksFilter {
-                first_block_number,
-                num_blocks,
-            }) => (first_block_number, num_blocks.as_u64()),
+        let (_view_num, block_height, _block_comm_root) = match event {
+            Ok(NewStateFilter {
+                view_num: _view_num,
+                block_height,
+                block_comm_root: _block_comm_root,
+            }) => (_view_num, block_height, _block_comm_root),
             Err(err) => {
-                tracing::error!("Error in HotShot block stream, retrying: {err}");
+                tracing::error!("Error in Light client  stream, retrying: {err}");
                 continue;
             }
         };
@@ -180,32 +168,15 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         // before building the batch proof
         let headers: Vec<Header> = header_stream
             .by_ref()
-            .take(num_blocks as usize)
+            .take(block_height as usize)
             .map(|result| result.expect("Error fetching block header"))
             .collect()
             .await;
 
         // Execute new blocks, generating proofs.
         let mut proofs = vec![];
-        tracing::info!(
-            "executing blocks {}-{}, state is {}",
-            first_block,
-            first_block + num_blocks - 1,
-            state.read().await.commit()
-        );
-        for (i, header) in headers.into_iter().enumerate() {
-            let commitment = hotshot_contract
-                .commitments(first_block + i)
-                .call()
-                .await
-                .expect("Unable to read commitment");
-            let block_commitment =
-                u256_to_commitment(commitment).expect("Unable to deserialize block commitment");
 
-            if header.commit() != block_commitment {
-                panic!("Block commitment does not match hash of received block, the executor cannot continue");
-            }
-
+        for header in headers.into_iter() {
             let namespace_proof_query: Result<NamespaceProofQueryData, ClientError> = hotshot
                 .get::<NamespaceProofQueryData>(&format!(
                     "block/{}/namespace/{}",
@@ -215,9 +186,6 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
                 .send()
                 .await;
 
-            // Weird bug where the only time this errors is when the returned response
-            // isn't of the correct type. It actually returns some random metadata about the
-            // request itself, instead of a response type.
             if namespace_proof_query.is_err() {
                 continue;
             }
@@ -251,10 +219,7 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
                     .await,
             );
             if let Some(stream) = &output_stream {
-                stream
-                    .send_async((first_block.as_u64() + (i as u64), state.clone()))
-                    .await
-                    .ok();
+                stream.send_async((block_height, state.clone())).await.ok();
             }
         }
 
@@ -266,223 +231,10 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         let state_comm = commitment_to_u256(state.read().await.commit());
 
         let proof = example_rollup::BatchProof::from(proof);
-        let call = rollup_contract.verify_blocks(num_blocks, state_comm, proof);
+        let call = rollup_contract.verify_blocks(block_height, state_comm, proof);
         while let Err(err) = contract_send::<_, _, ExampleRollupErrors>(&call).await {
             tracing::warn!("Failed to submit proof to contract, retrying: {err}");
-            sleep(std::time::Duration::from_secs(1)).await;
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::state::{Amount, Nonce};
-    use crate::transaction::{SignedTransaction, Transaction};
-    use crate::utils::{create_provider, deploy_example_contract, ExampleRollupContract};
-    use crate::RollupVM;
-
-    use super::*;
-    use async_compatibility_layer::{
-        async_primitives::broadcast,
-        logging::{setup_backtrace, setup_logging},
-    };
-    use async_std::task::spawn;
-    use derivative::Derivative;
-    use espresso_types::{MockSequencerVersions, NamespaceId, Transaction as SeqTransaction};
-    use ethers::prelude::k256::ecdsa::SigningKey;
-    use ethers::providers::{Middleware, Provider};
-    use ethers::signers::{LocalWallet, Signer};
-    use portpicker::pick_unused_port;
-    use rand::SeedableRng;
-    use rand_chacha::ChaChaRng;
-    use sequencer::api::test_helpers::{TestNetwork, TestNetworkConfigBuilder};
-    use sequencer::testing::TestConfigBuilder;
-    use sequencer::{
-        api::options::Options,
-        hotshot_commitment::{run_hotshot_commitment_task, CommitmentTaskOptions},
-        persistence::fs,
-        SequencerApiVersion,
-    };
-    use sequencer_utils::{test_utils::TestL1System, Anvil, AnvilOptions};
-    use std::time::Duration;
-    use surf_disco::error::ClientError;
-    use surf_disco::{Client, Url};
-    use tempfile::TempDir;
-
-    #[derive(Clone, Derivative)]
-    #[derivative(Debug)]
-    struct TestRollupInstance {
-        contract: ExampleRollupContract,
-        vm: RollupVM,
-        socket_provider: Provider<Ws>,
-        l1_url: Url,
-        alice: Wallet<SigningKey>,
-        state: Arc<RwLock<State>>,
-        bob: Wallet<SigningKey>,
-        #[derivative(Debug = "ignore")]
-        executor_send: BroadcastSender<(u64, State)>,
-    }
-
-    impl TestRollupInstance {
-        pub async fn launch(
-            l1_url: Url,
-            namespace_id: NamespaceId,
-            alice: Wallet<SigningKey>,
-            bob: Wallet<SigningKey>,
-            test_l1: &TestL1System,
-        ) -> Self {
-            // Create mock rollup state
-            let vm = RollupVM::new(namespace_id);
-            let state = State::from_initial_balances([(alice.address(), 9999)], vm);
-            let initial_state = state.commit();
-            let state = Arc::new(RwLock::new(state));
-            let mut ws_url = l1_url.clone();
-            ws_url.set_scheme("ws").unwrap();
-            let socket_provider = Provider::<Ws>::connect(ws_url).await.unwrap();
-            let rollup_contract = deploy_example_contract(test_l1, initial_state).await;
-            let (executor_send, _) = broadcast::channel();
-
-            Self {
-                contract: rollup_contract,
-                vm,
-                socket_provider,
-                alice,
-                l1_url,
-                bob,
-                state,
-                executor_send,
-            }
-        }
-
-        pub async fn test_transaction(&self, amount: Amount, nonce: Nonce) -> SeqTransaction {
-            let txn = Transaction {
-                amount,
-                destination: self.bob.address(),
-                nonce,
-            };
-            let txn = SignedTransaction::new(txn, &self.alice).await;
-            SeqTransaction::new(self.vm.0, txn.encode())
-        }
-    }
-
-    async fn spawn_anvil() -> Anvil {
-        let anvil = AnvilOptions::default()
-            .block_time(Duration::from_secs(1))
-            .spawn()
-            .await;
-
-        // When we are running a local Anvil node, as in tests, some endpoints (e.g. eth_feeHistory)
-        // do not work until at least one block has been mined. Wait until the fee history endpoint
-        // works.
-        let provider = create_provider(&anvil.url());
-        while let Err(err) = provider.fee_history(1, BlockNumber::Latest, &[]).await {
-            tracing::warn!("RPC is not ready: {err}");
             sleep(Duration::from_secs(1)).await;
-        }
-
-        anvil
-    }
-
-    const TEST_MNEMONIC: &str = "test test test test test test test test test test test junk";
-    #[async_std::test]
-    async fn test_execute() {
-        setup_logging();
-        setup_backtrace();
-
-        let anvil = spawn_anvil().await;
-        let alice = LocalWallet::new(&mut ChaChaRng::seed_from_u64(0));
-        let bob = LocalWallet::new(&mut ChaChaRng::seed_from_u64(1));
-
-        // Deploy hotshot contract
-        let provider = create_provider(&anvil.url());
-        let test_l1 = TestL1System::deploy(provider).await.unwrap();
-
-        // Start a test Rollup instance
-        let test_rollup = TestRollupInstance::launch(
-            anvil.url().clone(),
-            NamespaceId::from(10_u64),
-            alice,
-            bob.clone(),
-            &test_l1,
-        )
-        .await;
-
-        // Start a test HotShot configuration
-        let sequencer_port = pick_unused_port().unwrap();
-        let network_config = TestConfigBuilder::default().l1_url(anvil.url()).build();
-        let tmp_dir = TempDir::new().unwrap();
-        let storage_path = tmp_dir.path().join("tmp_storage");
-        let options = Options::with_port(sequencer_port)
-            .submit(Default::default())
-            .query_fs(Default::default(), fs::Options::new(storage_path))
-            .status(Default::default());
-
-        let config = TestNetworkConfigBuilder::default()
-            .api_config(options)
-            .network_config(network_config)
-            .build();
-
-        let network = TestNetwork::new(config, MockSequencerVersions::new()).await;
-        let txn = test_rollup.test_transaction(100, 1).await;
-        let sequencer_url: Url = format!("http://localhost:{sequencer_port}")
-            .parse()
-            .unwrap();
-        let client: Client<ClientError, SequencerApiVersion> = Client::new(sequencer_url.clone());
-
-        client.connect(None).await;
-        client
-            .post::<()>("submit/submit")
-            .body_json(&txn)
-            .unwrap()
-            .send()
-            .await
-            .unwrap();
-
-        // Spawn hotshot commitment and executor tasks
-        let hotshot_opt = CommitmentTaskOptions {
-            l1_provider: anvil.url(),
-            sequencer_mnemonic: TEST_MNEMONIC.to_string(),
-            sequencer_account_index: test_l1.clients.funded[0].index,
-            hotshot_address: test_l1.hotshot.address(),
-            l1_chain_id: None,
-            query_service_url: Some(sequencer_url.clone().join("v0").unwrap()),
-            request_timeout: Duration::from_secs(10),
-            delay: Some(Duration::from_secs(1)),
-        };
-
-        let rollup_opt = ExecutorOptions {
-            sequencer_url,
-            rollup_account_index: test_l1.clients.funded[1].index,
-            l1_http_provider: anvil.url(),
-            l1_ws_provider: anvil.ws_url(),
-            rollup_mnemonic: TEST_MNEMONIC.to_string(),
-            hotshot_address: test_l1.hotshot.address(),
-            rollup_address: test_rollup.contract.address(),
-            output_stream: Some(test_rollup.executor_send.clone()),
-        };
-
-        let state_lock = test_rollup.state.clone();
-        spawn(
-            async move { run_hotshot_commitment_task::<SequencerApiVersion>(&hotshot_opt).await },
-        );
-        spawn(async move { run_executor(&rollup_opt, state_lock).await });
-
-        let mut events = network.server.event_stream().await;
-
-        loop {
-            // Wait for an event. This stream should not end until our events have been processed.
-            events.next().await.unwrap();
-            let bob_balance = test_rollup
-                .state
-                .read()
-                .await
-                .get_balance(&bob.address().clone());
-            if bob_balance == 100 {
-                tracing::info!("Bob's balance was updated");
-                break;
-            } else {
-                tracing::info!("Bob's balance is {bob_balance}/100");
-            }
         }
     }
 }

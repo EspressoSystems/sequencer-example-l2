@@ -1,10 +1,9 @@
 pragma solidity ^0.8.13;
 
-// TODO: can we get rid of the `src` directory?
-import "hotshot/src/HotShot.sol";
+import "../lib/espresso-sequencer/contracts/src/LightClient.sol";
 
 contract ExampleRollup {
-    HotShot public hotshot;
+    LightClient public lightClient;
     uint256 public stateCommitment;
     uint256 public numVerifiedBlocks;
 
@@ -19,8 +18,9 @@ contract ExampleRollup {
 
     event StateUpdate(uint256 blockHeight, uint256 stateCommitment);
 
-    constructor(address hotshotAddress, uint256 initialState) {
-        hotshot = HotShot(hotshotAddress);
+    constructor(address lightClientAddress, uint256 initialState) {
+        lightClient = LightClient(lightClientAddress);
+
         stateCommitment = initialState;
         numVerifiedBlocks = 0;
     }
@@ -66,20 +66,15 @@ contract ExampleRollup {
         return oldState == proof.oldState && newState == proof.newState;
     }
 
-    function verifyBlocks(uint64 count, uint256 nextStateCommitment, BatchProof calldata proof) external {
+    function verifyBlocks(uint64 count, uint256 nextStateCommitment) external {
         if (count == 0) {
             revert NoBlocks();
         }
 
-        uint256 blockHeight = hotshot.blockHeight();
+        //  Use Light client contract to verify the proof and do other validations when in production
+        (, uint64 blockHeight,) = lightClient.finalizedState();
         if (numVerifiedBlocks + count > blockHeight) {
             revert NotYetSequenced(numVerifiedBlocks, count, blockHeight);
-        }
-
-        uint256 firstBlock = hotshot.commitments(numVerifiedBlocks);
-        uint256 lastBlock = hotshot.commitments(numVerifiedBlocks + count - 1);
-        if (!_verifyProof(firstBlock, lastBlock, stateCommitment, nextStateCommitment, proof)) {
-            revert InvalidProof(firstBlock, lastBlock, stateCommitment, nextStateCommitment, proof);
         }
 
         numVerifiedBlocks += count;

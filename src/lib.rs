@@ -52,10 +52,10 @@ pub struct Options {
     /// Address of HotShot contract on layer 1.
     #[clap(
         long,
-        env = "ESPRESSO_DEMO_HOTSHOT_ADDRESS",
-        default_value = "0xb19b36b1456e65e3a6d514d3f715f204bd59f431"
+        env = "ESPRESSO_DEMO_LIGHT_CLIENT_ADDRESS",
+        default_value = "0x0c8e79f3534b00d9a3d4a856b665bf4ebc22f2ba"
     )]
-    pub hotshot_address: Address,
+    pub light_client_address: Address,
 
     /// Mnemonic phrase for the rollup wallet.
     ///

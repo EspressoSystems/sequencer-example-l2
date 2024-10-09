@@ -56,13 +56,14 @@ async fn main() {
 
     tracing::info!("Deploying Rollup contracts");
     let provider = create_provider(&opt.l1_http_provider);
-    let test_system = TestL1System::new(provider, opt.hotshot_address)
+    let test_system = TestL1System::new(provider, opt.light_client_address)
         .await
         .unwrap();
-    let rollup_contract = deploy_example_contract(&test_system, initial_state).await;
+    let rollup_contract =
+        deploy_example_contract(&test_system, initial_state, opt.light_client_address).await;
 
     let executor_options = ExecutorOptions {
-        hotshot_address: opt.hotshot_address,
+        light_client_address: opt.light_client_address,
         l1_http_provider: opt.l1_http_provider.clone(),
         l1_ws_provider: opt.l1_ws_provider.clone(),
         rollup_address: rollup_contract.address(),
