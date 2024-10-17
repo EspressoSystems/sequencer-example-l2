@@ -11,8 +11,6 @@ contract ExampleRollup {
     // `numVerifiedBlocks + count`, but the HotShot `blockHeight` is less than
     // `numVerifiedBlocks + count`.
     error NotYetSequenced(uint256 numVerifiedBlocks, uint64 count, uint256 blockHeight);
-    // Attempted to verify an invalid proof.
-    error InvalidProof(uint256 firstBlock, uint256 lastBlock, uint256 oldState, uint256 newState, BatchProof proof);
     // Attempted to verify an empty chain of blocks;
     error NoBlocks();
 
