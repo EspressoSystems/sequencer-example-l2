@@ -14,11 +14,14 @@ pub enum RollupError {
     #[snafu(display("Error validating the transaction signature."))]
     SignatureError,
     #[snafu(display("Insufficient balance for sender: {address}."))]
-    InsufficientBalance { address: Address },
+    InsufficientBalance {
+        address: Address,
+    },
     #[snafu(display("Invalid nonce for sender {address}. Found {actual}, expected {expected}"))]
     InvalidNonce {
         address: Address,
         expected: Nonce,
         actual: Nonce,
     },
+    InvalidTransaction,
 }

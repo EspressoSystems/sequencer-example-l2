@@ -7,7 +7,6 @@
 use crate::error::RollupError;
 use crate::state::{Amount, Nonce};
 use ethers::{abi::Address, signers::Signer, types::Signature};
-use sequencer::VmTransaction;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -17,29 +16,12 @@ pub struct Transaction {
     pub nonce: Nonce,
 }
 
-impl VmTransaction for Transaction {
+impl Transaction {
     fn encode(&self) -> Vec<u8> {
         serde_json::to_string(&self)
             .expect("Serialization should not fail")
             .as_bytes()
             .to_vec()
-    }
-
-    fn decode(bytes: &[u8]) -> Option<Self> {
-        serde_json::from_slice(bytes).ok()
-    }
-}
-
-impl VmTransaction for SignedTransaction {
-    fn encode(&self) -> Vec<u8> {
-        serde_json::to_string(&self)
-            .expect("Serialization should not fail")
-            .as_bytes()
-            .to_vec()
-    }
-
-    fn decode(bytes: &[u8]) -> Option<Self> {
-        serde_json::from_slice(bytes).ok()
     }
 }
 
@@ -50,6 +32,17 @@ pub struct SignedTransaction {
 }
 
 impl SignedTransaction {
+    pub(crate) fn encode(&self) -> Vec<u8> {
+        serde_json::to_string(&self)
+            .expect("Serialization should not fail")
+            .as_bytes()
+            .to_vec()
+    }
+
+    pub(crate) fn decode(bytes: &[u8]) -> Option<Self> {
+        serde_json::from_slice(bytes).ok()
+    }
+
     pub fn recover(&self) -> Result<Address, RollupError> {
         let bytes = self.transaction.encode();
         self.signature

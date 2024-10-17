@@ -19,10 +19,11 @@ use example_l2::{
 };
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
-use surf_disco::Client;
-use tide_disco::{error::ServerError, Url};
+use sequencer::SequencerApiVersion;
+use surf_disco::{error::ClientError, Client};
+use tide_disco::Url;
 
-type RollupClient = Client<ServerError>;
+type RollupClient = Client<ClientError, SequencerApiVersion>;
 
 #[derive(Parser, Clone, Debug)]
 pub struct Options {

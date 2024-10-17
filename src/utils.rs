@@ -7,7 +7,7 @@
 use std::time::Duration;
 
 use crate::state::State;
-use commit::Commitment;
+use committable::Commitment;
 use contract_bindings::example_rollup::ExampleRollup;
 use ethers::{prelude::*, providers::Provider};
 use sequencer_utils::{commitment_to_u256, test_utils::TestL1System, Signer};
@@ -18,10 +18,11 @@ pub type ExampleRollupContract = ExampleRollup<Signer>;
 pub async fn deploy_example_contract(
     test_l1: &TestL1System,
     initial_state: Commitment<State>,
+    light_client_address: Address,
 ) -> ExampleRollupContract {
     ExampleRollup::deploy(
         test_l1.clients.deployer.provider.clone(),
-        (test_l1.hotshot.address(), commitment_to_u256(initial_state)),
+        (light_client_address, commitment_to_u256(initial_state)),
     )
     .unwrap()
     .send()
