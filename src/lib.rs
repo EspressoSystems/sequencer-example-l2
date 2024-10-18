@@ -53,7 +53,7 @@ pub struct Options {
     #[clap(
         long,
         env = "ESPRESSO_DEMO_LIGHT_CLIENT_ADDRESS",
-        default_value = "0x0c8e79f3534b00d9a3d4a856b665bf4ebc22f2ba"
+        default_value = "0xed1db453c3156ff3155a97ad217b3087d5dc5f6e"
     )]
     pub light_client_address: Address,
 

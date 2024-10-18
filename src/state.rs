@@ -98,51 +98,49 @@ impl State {
     /// 1) The signature on the transaction
     /// 2) The nonce of the transaction is greater than the sender nonce (this prevent replay attacks)
     /// 3) The sender has a high enough balance to cover the transfer amount
-    pub fn apply_transaction(&mut self, transaction_payload: &[u8]) -> Result<(), RollupError> {
+    pub fn apply_transaction(
+        &mut self,
+        transaction: &SignedTransaction,
+    ) -> Result<(), RollupError> {
         // convert transaction_payload to signed transaction
-        let transaction = SignedTransaction::decode(transaction_payload);
 
-        if let Some(transaction) = transaction {
-            let sender = transaction.recover()?;
-            let destination = transaction.transaction.destination;
-            let next_nonce = transaction.transaction.nonce;
-            let transfer_amount = transaction.transaction.amount;
-            let Account {
-                nonce: prev_nonce,
-                balance: sender_balance,
-            } = self
-                .accounts
-                .get_mut(&sender)
-                .ok_or(RollupError::InsufficientBalance { address: sender })?;
+        let sender = transaction.recover()?;
+        let destination = transaction.transaction.destination;
+        let next_nonce = transaction.transaction.nonce;
+        let transfer_amount = transaction.transaction.amount;
+        let Account {
+            nonce: prev_nonce,
+            balance: sender_balance,
+        } = self
+            .accounts
+            .get_mut(&sender)
+            .ok_or(RollupError::InsufficientBalance { address: sender })?;
 
-            // 2)
-            if next_nonce != *prev_nonce + 1 {
-                return Err(RollupError::InvalidNonce {
-                    address: sender,
-                    expected: *prev_nonce + 1,
-                    actual: next_nonce,
-                });
-            }
-
-            // 3)
-            if transfer_amount > *sender_balance {
-                return Err(RollupError::InsufficientBalance { address: sender });
-            }
-
-            // Transaction is valid, return the updated state
-            *sender_balance -= transfer_amount;
-            *prev_nonce = next_nonce;
-            let Account {
-                balance: destination_balance,
-                ..
-            } = self.accounts.entry(destination).or_default();
-            *destination_balance += transfer_amount;
-
-            tracing::info!("Applied transaction {next_nonce} for {sender}");
-            Ok(())
-        } else {
-            Err(RollupError::InvalidTransaction)
+        // 2)
+        if next_nonce != *prev_nonce + 1 {
+            return Err(RollupError::InvalidNonce {
+                address: sender,
+                expected: *prev_nonce + 1,
+                actual: next_nonce,
+            });
         }
+
+        // 3)
+        if transfer_amount > *sender_balance {
+            return Err(RollupError::InsufficientBalance { address: sender });
+        }
+
+        // Transaction is valid, return the updated state
+        *sender_balance -= transfer_amount;
+        *prev_nonce = next_nonce;
+        let Account {
+            balance: destination_balance,
+            ..
+        } = self.accounts.entry(destination).or_default();
+        *destination_balance += transfer_amount;
+
+        tracing::info!("Applied transaction {next_nonce} for {sender}");
+        Ok(())
     }
 
     /// Fetch the balance of an address
@@ -171,8 +169,12 @@ impl State {
         let state_commitment = self.commit();
         let transactions = namespace_proof.clone().unwrap().export_all_txs(&self.vm.0);
         for txn in transactions {
-            // convert transaction to signed transaction
-            let res = self.apply_transaction(txn.payload());
+            let signed_transaction = SignedTransaction::decode(txn.payload());
+            if signed_transaction.is_none() {
+                tracing::error!("Transaction invalid: Could not decode transaction");
+                continue;
+            }
+            let res = self.apply_transaction(&signed_transaction.unwrap());
             if let Err(err) = res {
                 tracing::error!("Transaction invalid: {}", err)
             }
@@ -214,9 +216,8 @@ mod tests {
 
         // Try to overspend
         let mut signed_transaction = SignedTransaction::new(transaction.clone(), &alice).await;
-        let transaction_payload = SignedTransaction::encode(&signed_transaction);
         let err = state
-            .apply_transaction(&transaction_payload)
+            .apply_transaction(&signed_transaction)
             .expect_err("Invalid transaction should throw error.");
         assert_eq!(
             err,
@@ -228,17 +229,15 @@ mod tests {
         // Now spend an valid amount
         transaction.amount = 50;
         signed_transaction = SignedTransaction::new(transaction, &alice).await;
-        let transaction_payload = SignedTransaction::encode(&signed_transaction);
         state
-            .apply_transaction(&transaction_payload)
+            .apply_transaction(&signed_transaction.clone())
             .expect("Valid transaction should transition state");
         let bob_balance = state.get_balance(&bob.address());
         assert_eq!(bob_balance, 150);
 
         // Now try to replay the transaction
-        let transaction_payload = SignedTransaction::encode(&signed_transaction);
         let err = state
-            .apply_transaction(&transaction_payload)
+            .apply_transaction(&signed_transaction)
             .expect_err("Invalid transaction should throw error.");
         assert_eq!(
             err,

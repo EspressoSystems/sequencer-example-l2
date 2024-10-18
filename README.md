@@ -37,7 +37,7 @@ Once that is finished deploy the example rollup, it can be run natively.
 To run natively a rust toolchain is required. We provide a nix shell to install
 all dependencies. Nix can be installed via the
 [nix-installer](https://github.com/DeterminateSystems/nix-installer). Once
-installed run
+installed run the following from the root of the project:
 
     nix develop
     just dev-demo
@@ -131,3 +131,19 @@ The rollup API is a REST API that includes a `submit` and `query` endpoint.
 
 The rollup contract stores the most recent rollup state commitment. The contract updates the state commitment when it
 receives a valid state transition proof from the executor.
+
+## Espresso
+
+In this example, we used a few Espresso components as described below. More information can be found in the [docs](https://docs.espressosys.com/sequencer)
+
+### Light Client
+
+The light client is a smart contract that verifies the integrity of the rollup state. The contract code can be found [here](https://github.com/EspressoSystems/espresso-sequencer/blob/main/contracts/src/LightClient.sol)
+
+### Espresso Network
+
+We ran an espresso network using the espresso-sequencer docker images. The network uses hotshot to achieve consensus on the rollup state. Architecture can be found [here](https://github.com/EspressoSystems/espresso-sequencer/tree/main?tab=readme-ov-file#architecture)
+
+### Hotshot
+
+Espresso Network uses [HotShot](https://github.com/EspressoSystems/HotShot) to achieve consensus on the rollup state.

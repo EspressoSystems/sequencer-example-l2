@@ -177,7 +177,7 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         // Execute new blocks, generating proofs.
         let mut proofs = vec![];
 
-        for header in headers.into_iter() {
+        for header in headers.clone().into_iter() {
             let namespace_proof_query: Result<NamespaceProofQueryData, ClientError> = hotshot
                 .get::<NamespaceProofQueryData>(&format!(
                     "block/{}/namespace/{}",
@@ -232,7 +232,8 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         let state_comm = commitment_to_u256(state.read().await.commit());
 
         let proof = example_rollup::BatchProof::from(proof);
-        let call = rollup_contract.verify_blocks(block_height, state_comm, proof);
+        let call =
+            rollup_contract.verify_blocks(headers.len().try_into().unwrap(), state_comm, proof);
         let res = contract_send::<_, _, ExampleRollupErrors>(&call).await;
         if let Err(err) = res {
             tracing::warn!("Failed to submit proof to contract, retrying: {err}");

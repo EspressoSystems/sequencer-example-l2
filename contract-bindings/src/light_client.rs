@@ -3165,4 +3165,41 @@ pub mod light_client {
         Hash,
     )]
     pub struct StateHistoryRetentionPeriodReturn(pub u32);
+    ///`LightClientState(uint64,uint64,uint256)`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        serde::Serialize,
+        serde::Deserialize,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct LightClientState {
+        pub view_num: u64,
+        pub block_height: u64,
+        pub block_comm_root: ::ethers::core::types::U256,
+    }
+    ///`StakeTableState(uint256,uint256,uint256,uint256)`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        serde::Serialize,
+        serde::Deserialize,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct StakeTableState {
+        pub threshold: ::ethers::core::types::U256,
+        pub bls_key_comm: ::ethers::core::types::U256,
+        pub schnorr_key_comm: ::ethers::core::types::U256,
+        pub amount_comm: ::ethers::core::types::U256,
+    }
 }
