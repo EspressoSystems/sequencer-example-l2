@@ -7,7 +7,8 @@
 use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
 use async_std::sync::RwLock;
 use clap::Parser;
-use commit::Committable;
+use committable::Committable;
+use espresso_types::NamespaceId;
 use ethers::signers::{LocalWallet, Signer};
 use example_l2::{
     api::{serve, APIOptions},
@@ -30,7 +31,7 @@ async fn main() {
     setup_backtrace();
 
     let opt = Options::parse();
-    let vm = RollupVM::new(1.into());
+    let vm = RollupVM::new(NamespaceId::from(1_u64));
 
     let mut initial_balances = vec![];
     for identity in SeedIdentity::iter() {
@@ -55,13 +56,14 @@ async fn main() {
 
     tracing::info!("Deploying Rollup contracts");
     let provider = create_provider(&opt.l1_http_provider);
-    let test_system = TestL1System::new(provider, opt.hotshot_address)
+    let test_system = TestL1System::new(provider, opt.light_client_address)
         .await
         .unwrap();
-    let rollup_contract = deploy_example_contract(&test_system, initial_state).await;
+    let rollup_contract =
+        deploy_example_contract(&test_system, initial_state, opt.light_client_address).await;
 
     let executor_options = ExecutorOptions {
-        hotshot_address: opt.hotshot_address,
+        light_client_address: opt.light_client_address,
         l1_http_provider: opt.l1_http_provider.clone(),
         l1_ws_provider: opt.l1_ws_provider.clone(),
         rollup_address: rollup_contract.address(),

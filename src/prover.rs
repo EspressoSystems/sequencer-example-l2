@@ -5,16 +5,17 @@
 // along with the sequencer-example-l2 repository. If not, see <https://mit-license.org/>.
 
 extern crate derive_more;
-use ark_serialize::SerializationError;
-use commit::{Commitment, Committable};
+
+use committable::Commitment;
 use contract_bindings::example_rollup as bindings;
 use derive_more::Into;
-use jf_primitives::merkle_tree::namespaced_merkle_tree::NamespaceProof;
-use sequencer::{NMTRoot, NamespaceProofType, Vm};
-use sequencer_utils::{commitment_to_u256, u256_to_commitment};
+use espresso_types::{Header, NsProof, SeqTypes};
+use hotshot_query_service::availability::BlockHash;
+use hotshot_query_service::VidCommon;
+use sequencer_utils::commitment_to_u256;
 use snafu::Snafu;
 
-use crate::{state::State, RollupVM};
+use crate::state::State;
 
 /// An error that occurs while generating proofs.
 #[derive(Clone, Debug, Snafu)]
@@ -31,7 +32,7 @@ pub enum ProofError {
 /// previous_state_commitment when the transactions in a given block are applied.
 #[derive(Debug, Clone)]
 pub(crate) struct Proof {
-    block: Commitment<NMTRoot>,
+    block: BlockHash<SeqTypes>,
     old_state: Commitment<State>,
     new_state: Commitment<State>,
 }
@@ -43,18 +44,19 @@ impl Proof {
     /// Transaction data comes from the 'get_namespaced_leaves' method of the NamespaceProof interface.
     /// A real prover would incorporate this data during proof construction.
     pub fn generate(
-        nmt_comm: NMTRoot,
+        header: Header,
         state_commitment: Commitment<State>,
         previous_state_commitment: Commitment<State>,
-        namespace_proof: NamespaceProofType,
-        rollup_vm: &RollupVM,
+        namespace_proof: Option<NsProof>,
+        vid_common: VidCommon,
+        block: BlockHash<SeqTypes>,
     ) -> Self {
         namespace_proof
-            .verify(&nmt_comm.root(), rollup_vm.id())
-            .expect("Namespace proof failure, cannot continue")
+            .unwrap()
+            .verify(header.ns_table(), &header.payload_commitment(), &vid_common)
             .expect("Namespace proof failure, cannot continue");
         Self {
-            block: nmt_comm.commit(),
+            block,
             old_state: previous_state_commitment,
             new_state: state_commitment,
         }
@@ -62,10 +64,10 @@ impl Proof {
 }
 
 /// A mock proof aggregating a batch of proofs for a range of blocks.
-#[derive(Debug, Clone, Into)]
+#[derive(Into)]
 pub(crate) struct BatchProof {
-    first_block: Commitment<NMTRoot>,
-    last_block: Commitment<NMTRoot>,
+    first_block: BlockHash<SeqTypes>,
+    last_block: BlockHash<SeqTypes>,
     old_state: Commitment<State>,
     new_state: Commitment<State>,
 }
@@ -90,22 +92,9 @@ impl BatchProof {
 
         Ok(BatchProof {
             first_block: proofs[0].block,
-            last_block: proofs[proofs.len() - 1].block,
+            last_block: proofs[proofs.len() - 1].clone().block,
             old_state: proofs[0].old_state,
             new_state: proofs[proofs.len() - 1].new_state,
-        })
-    }
-}
-
-impl TryFrom<bindings::BatchProof> for BatchProof {
-    type Error = SerializationError;
-
-    fn try_from(p: bindings::BatchProof) -> Result<Self, Self::Error> {
-        Ok(Self {
-            first_block: u256_to_commitment(p.first_block)?,
-            last_block: u256_to_commitment(p.last_block)?,
-            old_state: u256_to_commitment(p.old_state)?,
-            new_state: u256_to_commitment(p.new_state)?,
         })
     }
 }
