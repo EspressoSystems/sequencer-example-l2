@@ -6,10 +6,9 @@
 
 use clap::Parser;
 use derive_more::{From, Into};
+use espresso_types::NamespaceId;
 use ethers::types::Address;
-use sequencer::{Vm, VmId};
 use surf_disco::Url;
-use transaction::SignedTransaction;
 
 pub mod api;
 pub mod error;
@@ -30,7 +29,7 @@ pub struct Options {
     #[clap(
         long,
         env = "ESPRESSO_SEQUENCER_URL",
-        default_value = "http://localhost:50000"
+        default_value = "http://0.0.0.0:24000/v0/"
     )]
     pub sequencer_url: Url,
 
@@ -46,17 +45,17 @@ pub struct Options {
     #[clap(
         long,
         env = "ESPRESSO_DEMO_L1_WS_PROVIDER",
-        default_value = "ws://localhost:8545"
+        default_value = "ws://localhost:8546"
     )]
     pub l1_ws_provider: Url,
 
     /// Address of HotShot contract on layer 1.
     #[clap(
         long,
-        env = "ESPRESSO_DEMO_HOTSHOT_ADDRESS",
-        default_value = "0x0116686e2291dbd5e317f47fadbfb43b599786ef"
+        env = "ESPRESSO_DEMO_LIGHT_CLIENT_ADDRESS",
+        default_value = "0xed1db453c3156ff3155a97ad217b3087d5dc5f6e"
     )]
-    pub hotshot_address: Address,
+    pub light_client_address: Address,
 
     /// Mnemonic phrase for the rollup wallet.
     ///
@@ -76,18 +75,11 @@ pub struct Options {
 }
 
 #[derive(Clone, Copy, Debug, Default, Into, From)]
-pub struct RollupVM(VmId);
+
+pub struct RollupVM(NamespaceId);
 
 impl RollupVM {
-    pub fn new(id: VmId) -> Self {
-        RollupVM(id)
-    }
-}
-
-impl Vm for RollupVM {
-    type Transaction = SignedTransaction;
-
-    fn id(&self) -> VmId {
-        self.0
+    pub fn new(namespace: NamespaceId) -> Self {
+        RollupVM(namespace)
     }
 }
