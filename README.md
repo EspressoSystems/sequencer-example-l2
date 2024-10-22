@@ -44,26 +44,30 @@ installed run the following from the root of the project:
 
 ### Interacting with the Demo
 
-## Curl
+After running `just dev-demo`, you will be able to see `new state event` logs after a few minutes.
 
-With the demo running, navigate to http://localhost:8082/ for API documentation.
+![new-state](./images/new-state.png)
 
-1. Query the genesis account balance:
+Query the genesis account balance, the initial balance should be 9999
 
 ```
 curl http://localhost:8084/v0/rollup/balance/0xf23694f9c6d4837fc596c4eb7c3c3d8a8bae69ca
 ```
 
-2. Send tokens to `0x885ee92eebda03540066a25a57cc625bbee15d5a`:
+Send some tokens to `0x885ee92eebda03540066a25a57cc625bbee15d5a` using:
 
 ```
 curl -X POST -H "Content-Type: application/json" http://0.0.0.0:8084/v0/rollup/submit -d "{\"transaction\":{\"amount\":100,\"destination\":\"0x885ee92eebda03540066a25a57cc625bbee15d5a\",\"nonce\":1},\"signature\":{\"r\":\"0x61395b25cf41321bc1242ec301c0aa5a5e5ff47b697f80119a20ce3e5be66f9e\",\"s\":\"0x447cf03a5ddb28b9a189d108a8e91efa523fd3fb37cebab1cad610d82a8edbb0\",\"v\":27}}"
 ```
 
-3. Query `0x885ee92eebda03540066a25a57cc625bbee15d5a` balance:
+After you have sent the transaction, wait for the `Applied Transaction` and `Proof submitted` log before querying the updated balance.
+
+![proof-submitted](./images/proof-submitted.png)
+
+Query the updated balance:
 
 ```
-curl http://localhost:8084/v0/rollup/balance/0x885ee92eebda03540066a25a57cc625bbee15d5a
+curl http://localhost:8084/v0/rollup/balance/0xf23694f9c6d4837fc596c4eb7c3c3d8a8bae69ca
 ```
 
 ## Transaction Lifecycle
