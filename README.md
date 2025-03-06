@@ -1,6 +1,6 @@
 # Example Rollup Documentation
 
-This repository contains an example rollup that integrates with the Espresso Sequencer. The example rollup represents a
+This repository contains an example rollup that integrates with the Espresso Network. The example rollup represents a
 simple key/value account store that receives ordered transactions from Espresso, executes them in the rollup VM, and
 publishes mock state proofs to an L1 (Ethereum) smart contract. The rollup contains a simple API for submitting
 transactions and querying account balances.
@@ -12,7 +12,7 @@ Espresso is built upon
 At a high level, a rollup is an L1 scaling solution that performs expensive computations off chain. In the case of
 zkRollups, a prover periodically submits rollup state checkpoints along with batch proofs of transaction validity to the
 L1. The example illustrated here is a mock zkRollup. To learn more about the Espresso
-rollups, read our [docs](https://docs.espressosys.com/sequencer)
+rollups, read our [docs](https://docs.espressosys.com/network)
 
 ## Running the Example
 
@@ -23,12 +23,12 @@ Ensure `docker` is installed on your system.
 For linux distributions follow official instructions of your linux distribution or see
 [the official docker instructions](https://docs.docker.com/engine/install/).
 
-### Running the Example Rollup on the Espresso Sequencer
+### Running the Example Rollup on the Espresso Network
 
-We first need to start a local Espresso Sequencer network.
+We first need to start a local Espresso Network.
 
-    git clone https://github.com/EspressoSystems/espresso-sequencer
-    cd espresso-sequencer
+    git clone https://github.com/EspressoSystems/espresso-network
+    cd espresso-network
     docker compose pull
     docker compose up -d --wait
 
@@ -73,22 +73,22 @@ curl http://localhost:8084/v0/rollup/balance/0xf23694f9c6d4837fc596c4eb7c3c3d8a8
 ## Transaction Lifecycle
 
 The diagram below represents the lifecycle of a single rollup transaction, illustrating how the example rollup interacts
-with the Espresso sequencer along the way. The diagram below is a simplified version of this
-[system overview](https://docs.espressosys.com/sequencer/espresso-sequencer-architecture/system-overview), focusing on a
+with the Espresso network along the way. The diagram below is a simplified version of this
+[system overview](https://docs.espressosys.com/network/learn/the-espresso-network/system-overview), focusing on a
 single example rollup transaction.
 
 ![Example Rollup](./doc/example_l2.svg)
 
 1. Alice signs a transaction transferring rollup tokens to Bob. Alice sends this transaction to the Rollup through the
    `submit` endpoint of the rollup API. If Alice is concerned about censorship, she can send her transaction directly to
-   the sequencer.
-2. The rollup API server forwards the transaction to the sequencer. The transaction is tagged with the rollup’s unique
+   the network.
+2. The rollup API server forwards the transaction to the network. The transaction is tagged with the rollup’s unique
    Namespace ID so that the rollup can identify its own transactions in step 4.
-3. The sequencer network processes the transaction, eventually including it in a block. A sequencer node submits the
+3. The Espresso network processes the transaction, eventually including it in a block. An Espresso node submits the
    new state to the `Light Client` contract on L1, which verifies that consensus has been reached on the new state.
 4. The executor service receives notification of the new state via a subscription to a query service provided
-   by a sequencer node.
-5. The executor also listens for the headers of the new block that was sequenced on the hotshot network. It then fetches the
+   by an Espresso node.
+5. The executor also listens for the headers of the new block that was sequenced on the Espresso Network. It then fetches the
    namespace proof, vid common and block hash.
 6. The executor then processes the
    transactions, performing the following steps:
@@ -101,7 +101,7 @@ single example rollup transaction.
    - The executor computes a new state commitment, and generates a mock proof that the state was updated correctly with
      respect to the HotShot block commitment.
 7. The executor posts the proof to the rollup contract.
-8. The rollup contract verifies the proof by querying the latest certified block commitment from the sequencer contract.
+8. The rollup contract verifies the proof by querying the latest certified block commitment from the Light Client contract.
    Note: In our current implementation, we aren't doing much verification in the contract. For production purposes, the rollup contract
    will need to do additional verifications with the light client state.
 9. Bob queries his balance using the rollup API, and sees that he has received some new tokens. If this were a real
@@ -138,15 +138,20 @@ receives a valid state transition proof from the executor.
 
 ## Espresso
 
-In this example, we used a few Espresso components as described below. More information can be found in the [docs](https://docs.espressosys.com/sequencer)
+In this example, we used a few Espresso components as described below. More information can be found
+in the [docs](https://docs.espressosys.com/network)
 
 ### Light Client
 
-The light client is a smart contract that verifies the integrity of the rollup state. The contract code can be found [here](https://github.com/EspressoSystems/espresso-sequencer/blob/main/contracts/src/LightClient.sol)
+The light client is a smart contract that verifies the integrity of the rollup state. The contract
+code can be found
+[here](https://github.com/EspressoSystems/espresso-network/blob/main/contracts/src/LightClient.sol)
 
 ### Espresso Network
 
-We ran an espresso network using the espresso-sequencer docker images. The network uses hotshot to achieve consensus on the rollup state. Architecture can be found [here](https://github.com/EspressoSystems/espresso-sequencer/tree/main?tab=readme-ov-file#architecture)
+We ran an espresso network using the espresso-network docker images. The network uses hotshot to
+achieve consensus on the rollup state. Architecture can be found
+[here](https://github.com/EspressoSystems/espresso-network/tree/main?tab=readme-ov-file#architecture)
 
 ### Hotshot
 

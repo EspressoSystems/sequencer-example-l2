@@ -2,14 +2,14 @@ version: "3"
 
 networks:
   default:
+    # TODO: change to espresso network when github.com/espressosystems/espresso-network is updated
     name: espresso-sequencer
 
 services:
-
   example-rollup:
-    image: ghcr.io/espressosystems/espresso-sequencer/example-rollup:main
+    image: ghcr.io/espressosystems/espresso-network/example-rollup:main
     environment:
-      - ESPRESSO_SEQUENCER_URL
+      - ESPRESSO_NETWORK_URL
       - ESPRESSO_DEMO_L1_HTTP_PROVIDER
       - ESPRESSO_DEMO_L1_WS_PROVIDER
       - ESPRESSO_DEMO_HOTSHOT_ADDRESS

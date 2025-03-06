@@ -1,9 +1,6 @@
 [submodule "contracts/lib/forge-std"]
 	path = contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "contracts/lib/hotshot"]
-	path = contracts/lib/hotshot
-	url = https://github.com/EspressoSystems/espresso-sequencer
-[submodule "contracts/lib/espresso-sequencer"]
-	path = contracts/lib/espresso-sequencer
-	url = https://github.com/EspressoSystems/espresso-sequencer
+[submodule "contracts/lib/espresso-network"]
+	path = contracts/lib/espresso-network
+	url = https://github.com/espressosystems/espresso-network

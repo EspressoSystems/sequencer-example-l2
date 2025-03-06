@@ -20,7 +20,7 @@ use tide_disco::{error::ServerError, Api, App};
 #[derive(Clone, Debug)]
 pub struct APIOptions {
     pub api_port: u16,
-    pub sequencer_url: Url,
+    pub espresso_url: Url,
 }
 
 async fn submit_transaction(
@@ -47,7 +47,7 @@ pub async fn serve(options: &APIOptions, state: Arc<RwLock<State>>) -> io::Resul
     let error_mapper = |err| io::Error::new(io::ErrorKind::Other, err);
     let APIOptions {
         api_port,
-        sequencer_url,
+        espresso_url,
         ..
     } = options.clone();
     let mut app = App::<StateType, ServerError>::with_state(state);
@@ -57,7 +57,7 @@ pub async fn serve(options: &APIOptions, state: Arc<RwLock<State>>) -> io::Resul
         Api::<StateType, ServerError, SequencerApiVersion>::new(toml).map_err(error_mapper)?;
 
     api.post("submit",  move|req, _state| {
-        let url = sequencer_url.clone();
+        let url = espresso_url.clone();
         async move {
             let transaction = req
                 .body_auto::<SignedTransaction, SequencerApiVersion>(SequencerApiVersion {}).
@@ -142,7 +142,7 @@ mod tests {
         let client: Client<ClientError, SequencerApiVersion> = Client::new(api_url.clone());
         let options = APIOptions {
             api_port: port,
-            sequencer_url: api_url,
+            espresso_url: api_url,
         };
 
         spawn(async move { serve(&options, state).await });
@@ -188,7 +188,7 @@ mod tests {
 
         let options = APIOptions {
             api_port,
-            sequencer_url: format!("http://localhost:{port}").parse().unwrap(),
+            espresso_url: format!("http://localhost:{port}").parse().unwrap(),
         };
 
         spawn(async move { serve(&options, state).await });

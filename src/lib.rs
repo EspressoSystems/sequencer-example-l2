@@ -17,7 +17,6 @@ mod prover;
 pub mod seed;
 pub mod state;
 pub mod transaction;
-pub mod utils;
 
 #[derive(Parser, Clone, Debug)]
 pub struct Options {
@@ -25,13 +24,13 @@ pub struct Options {
     #[clap(short, long, env = "ESPRESSO_DEMO_ROLLUP_PORT", default_value = "8084")]
     pub api_port: u16,
 
-    /// URL of a HotShot sequencer node.
+    /// URL of an Espresso query service node.
     #[clap(
         long,
-        env = "ESPRESSO_SEQUENCER_URL",
+        env = "ESPRESSO_NETWORK_URL",
         default_value = "http://0.0.0.0:24000/v0/"
     )]
-    pub sequencer_url: Url,
+    pub espresso_url: Url,
 
     /// URL of layer 1 Ethereum JSON-RPC provider.
     #[clap(

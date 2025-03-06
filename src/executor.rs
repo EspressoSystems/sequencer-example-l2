@@ -87,7 +87,7 @@ type HotShotClient = surf_disco::Client<ClientError, SequencerApiVersion>;
 
 #[derive(Clone, Debug)]
 pub struct ExecutorOptions {
-    pub sequencer_url: Url,
+    pub espresso_url: Url,
     pub l1_http_provider: Url,
     pub l1_ws_provider: Url,
     pub rollup_account_index: u32,
@@ -103,7 +103,7 @@ pub struct ExecutorOptions {
 pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
     let ExecutorOptions {
         rollup_account_index,
-        sequencer_url,
+        espresso_url,
         l1_http_provider,
         l1_ws_provider,
         light_client_address,
@@ -112,7 +112,7 @@ pub async fn run_executor(opt: &ExecutorOptions, state: Arc<RwLock<State>>) {
         output_stream,
     } = opt;
 
-    let query_service_url = sequencer_url.join("availability").unwrap();
+    let query_service_url = espresso_url.join("availability").unwrap();
     let hotshot = HotShotClient::new(query_service_url.clone());
 
     hotshot.connect(None).await;

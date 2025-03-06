@@ -108,7 +108,7 @@ jobs:
         uses: docker/metadata-action@v5
         id: example-rollup
         with:
-          images: ghcr.io/espressosystems/espresso-sequencer/example-rollup
+          images: ghcr.io/espressosystems/espresso-network/example-rollup
 
       - name: Build and push example-rollup docker
         uses: docker/build-push-action@v4

@@ -46,12 +46,7 @@ impl Committable for State {
         committable::RawCommitmentBuilder::new("State Commitment")
             .array_field(
                 "block_hash",
-                &self
-                    .block_hash
-                    .iter()
-                    .cloned()
-                    .map(BlockHash::<SeqTypes>::from)
-                    .collect::<Vec<_>>(),
+                &self.block_hash.iter().cloned().collect::<Vec<_>>(),
             )
             .array_field(
                 "prev_state_commitment",
@@ -59,7 +54,6 @@ impl Committable for State {
                     .prev_state_commitment
                     .iter()
                     .cloned()
-                    .map(Commitment::<State>::from)
                     .collect::<Vec<_>>(),
             )
             .var_size_field("accounts", serialized_accounts.as_bytes())
