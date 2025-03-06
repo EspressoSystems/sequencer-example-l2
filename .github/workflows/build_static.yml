@@ -50,6 +50,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         name: Enable Rust Caching
+        with:
+          prefix-key: v0-
 
       - name: Fix Git Security Issue
         run: git config --global --add safe.directory "$PWD"
