@@ -32,11 +32,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         name: Enable Rust Caching
 
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Format Check
         run: cargo fmt -- --check
 
       - name: Check
         run: cargo clippy --workspace --all-features --all-targets -- -D warnings
-
-      - name: Audit
-        run: cargo audit
