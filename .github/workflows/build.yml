@@ -18,9 +18,7 @@ env:
 
 jobs:
   build:
-    runs-on: self-hosted
-    container:
-      image: ghcr.io/espressosystems/devops-rust:stable
+    runs-on: ubuntu-latest
     steps:
       - uses: styfle/cancel-workflow-action@0.11.0
         name: Cancel Outdated Builds
@@ -41,10 +39,10 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --release --workspace
+          cargo build --workspace
 
       - name: Test
         run: |
-          cargo test --release --workspace --no-run
-          cargo test --release --workspace --verbose -- --test-threads 1 --nocapture
+          cargo test --workspace --no-run
+          cargo test --workspace --verbose -- --test-threads 1 --nocapture
         timeout-minutes: 30
