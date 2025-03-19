@@ -16,6 +16,7 @@ pkgs.mkShell rec {
     # Crate dependencies
     cargoDeps.openssl-sys
     protobuf # required by libp2p
+    openssl
 
     openssh
   ];

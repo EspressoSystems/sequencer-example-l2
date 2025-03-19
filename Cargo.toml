@@ -7,6 +7,7 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.97"
 ark-serialize = { version = "0.4", features = ["derive"] }
 async-compatibility-layer = { version = "1.2.1", default-features = false, features = [
     "logging-utils",
@@ -16,16 +17,16 @@ clap = { version = "4.4", features = ["derive", "env", "string"] }
 committable = "0.2"
 contract-bindings = { path = "./contract-bindings" }
 derive_more = "0.99.17"
-espresso_types = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "espresso-types" }
+espresso_types = { git = "https://github.com/EspressoSystems/espresso-network", package = "espresso-types" }
 ethers = { version = "2.0.4", features = ["ws"] }
 futures = "0.3.28"
-hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", package = "contract-bindings" }
-hotshot-query-service = { git = "https://github.com/EspressoSystems/hotshot-query-service", tag = "0.1.61" }
+hotshot-contract-bindings = { git = "https://github.com/EspressoSystems/espresso-network", package = "contract-bindings-ethers" }
+hotshot-query-service = { git = "https://github.com/EspressoSystems/espresso-network" }
 jf_merkle_tree = { git = "https://github.com/EspressoSystems/jellyfish", package = "jf-merkle-tree" }
 rand = "0.8.5"
 rand_chacha = "0.3"
-sequencer = { git = "https://github.com/EspressoSystems/espresso-sequencer.git", features = ["testing"] }
-sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
+sequencer = { git = "https://github.com/EspressoSystems/espresso-network", features = ["testing"] }
+sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-network" }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_json = "^1.0.113"
 snafu = "0.7.4"
@@ -40,8 +41,9 @@ vec1 = "1.12.1"
 
 [dev-dependencies]
 derivative = "2.2"
-hotshot = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.75", features = ["dependency-tasks"] }
-hotshot-types = { git = "https://github.com/EspressoSystems/hotshot", tag = "0.5.75", package = "hotshot-types" }
+# hotshot = { git = "https://github.com/EspressoSystems/espresso-network", features = ["dependency-tasks"] }
+hotshot = { git = "https://github.com/EspressoSystems/espresso-network" }
+hotshot-types = { git = "https://github.com/EspressoSystems/espresso-network", package = "hotshot-types" }
 portpicker = "0.1.1"
-sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-sequencer.git" }
+sequencer-utils = { git = "https://github.com/EspressoSystems/espresso-network" }
 tempfile = "3.10"

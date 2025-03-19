@@ -42,26 +42,10 @@
         RUST_BACKTRACE = 1;
         RUSTFLAGS = " --cfg async_executor_impl=\"async-std\" --cfg async_channel_impl=\"async-std\"";
 
-        solhintPkg = { buildNpmPackage, fetchFromGitHub }: buildNpmPackage rec {
-          pname = "solhint";
-          version = "3.4.1";
-          src = fetchFromGitHub {
-            owner = "protofire";
-            repo = pname;
-            rev = "v${version}";
-            hash = "sha256-cOZgphyNbTBWnnomOoQj9Ferss6/109EGkzVZY1eqrg=";
-          };
-          npmDepsHash = "sha256-s037N+fma4aLTrEhRb64UGr7uItP7v0s1gQ9X7fra00=";
-          dontNpmBuild = true;
-        };
-
         overlays = [
           (import rust-overlay)
           foundry.overlay
           solc-bin.overlays.default
-          (final: prev: {
-            solhint = solhintPkg { inherit (prev) buildNpmPackage fetchFromGitHub; };
-          })
         ];
         pkgs = import nixpkgs {
           inherit system overlays;
@@ -74,7 +58,7 @@
               inherit overlays localSystem crossSystem;
             };
           in
-          import ./cross-shell.nix { 
+          import ./cross-shell.nix {
             inherit pkgs;
             inherit RUST_LOG RUST_BACKTRACE RUSTFLAGS;
           };
@@ -109,7 +93,7 @@
               cargo-clippy = {
                 enable = true;
                 description = "Run clippy";
-                entry = "cargo clippy --workspace --all-features --all-targets -- -D warnings";
+                entry = "cargo clippy --workspace --all-targets -- -D warnings";
                 types_or = [ "rust" "toml" ];
                 pass_filenames = false;
               };
@@ -119,13 +103,6 @@
                 entry = "forge fmt";
                 types_or = [ "solidity" ];
                 pass_filenames = false;
-              };
-              solhint = {
-                enable = true;
-                description = "Solidity linter";
-                entry = "solhint --fix 'contracts/{script,src,test}/**/*.sol'";
-                types_or = [ "solidity" ];
-                pass_filenames = true;
               };
               # MA: broken as of 2023-10-05. Cargo fmt makes changes to the generated
               # bindings which then cause the consistency check of `forge bind` to fail
@@ -149,14 +126,7 @@
         };
         devShells.default =
           let
-            stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
-              extensions = [ "rustfmt" "clippy" "llvm-tools-preview" "rust-src" ];
-            };
-            # nixWithFlakes allows pre v2.4 nix installations to use
-            # flake commands (like `nix flake update`)
-            nixWithFlakes = pkgs.writeShellScriptBin "nix" ''
-              exec ${pkgs.nixFlakes}/bin/nix --experimental-features "nix-command flakes" "$@"
-            '';
+            stableToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
             solc = pkgs.solc-bin.latest;
           in
           mkShell
@@ -178,7 +148,6 @@
                 fenix.packages.${system}.rust-analyzer
 
                 # Tools
-                nixWithFlakes
                 entr
 
                 # Figures
@@ -190,8 +159,7 @@
                 foundry-bin
                 solc
                 nodePackages.prettier
-                solhint
-		(python3.withPackages (ps: with ps; [ black ]))
+                (python3.withPackages (ps: with ps; [ black ]))
 
               ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.SystemConfiguration ];
               shellHook = ''
@@ -207,9 +175,7 @@
         devShells.armCrossShell = crossShell { config = "aarch64-unknown-linux-musl"; };
         devShells.rustShell =
           let
-            stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
-              extensions = [ "rustfmt" "clippy" "llvm-tools-preview" "rust-src" ];
-            };
+            stableToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
           in
           mkShell
             {

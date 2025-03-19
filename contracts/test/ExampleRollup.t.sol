@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../lib/espresso-sequencer/contracts/src/LightClient.sol";
+import "../lib/espresso-network/contracts/src/LightClient.sol";
 
 import "../src/ExampleRollup.sol";
 

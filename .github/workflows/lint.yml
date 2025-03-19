@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  RUSTFLAGS: "--cfg async_executor_impl=\"async-std\" --cfg async_channel_impl=\"async-std\""
+  RUSTFLAGS: '--cfg async_executor_impl="async-std" --cfg async_channel_impl="async-std"'
   RUST_LOG: info,libp2p=off
 
 jobs:
@@ -32,11 +32,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         name: Enable Rust Caching
 
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Format Check
         run: cargo fmt -- --check
 
       - name: Check
-        run: cargo clippy --workspace --all-features --all-targets -- -D warnings
-
-      - name: Audit
-        run: cargo audit --ignore RUSTSEC-2023-0052 --ignore RUSTSEC-2023-0065 --ignore RUSTSEC-2023-0071 --ignore RUSTSEC-2024-0336
+        run: cargo clippy --workspace --all-targets -- -D warnings

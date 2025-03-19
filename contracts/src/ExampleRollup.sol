@@ -1,6 +1,6 @@
 pragma solidity ^0.8.13;
 
-import "../lib/espresso-sequencer/contracts/src/LightClient.sol";
+import "../lib/espresso-network/contracts/src/LightClient.sol";
 
 contract ExampleRollup {
     LightClient public lightClient;

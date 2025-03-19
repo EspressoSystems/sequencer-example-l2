@@ -53,7 +53,11 @@ impl Proof {
     ) -> Self {
         namespace_proof
             .unwrap()
-            .verify(header.ns_table(), &header.payload_commitment(), &vid_common)
+            .verify(
+                header.ns_table(),
+                &header.payload_commitment(),
+                &vid_common.unwrap(),
+            )
             .expect("Namespace proof failure, cannot continue");
         Self {
             block,

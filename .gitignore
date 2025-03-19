@@ -15,3 +15,6 @@ target/
 cache/
 
 node_modules/
+
+# foundry solidity dependencies
+contracts/lib
